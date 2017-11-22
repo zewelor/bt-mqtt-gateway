@@ -1,0 +1,10 @@
+mqtt:
+  host: 192.168.1.1
+  username: user
+  password: password
+workers:
+  thermostat:
+    args:
+      devices:
+        bedroom: 00:11:22:33:44:55
+      topic_prefix: thermostats
