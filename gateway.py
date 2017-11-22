@@ -2,8 +2,6 @@ from config import settings
 from mqtt import MqttClient
 from workers_manager import WorkersManager
 
-print(settings)
-
 mqtt = MqttClient(settings['mqtt'])
 
 workers = WorkersManager(settings['workers'])
