@@ -1,5 +1,7 @@
 import time
 
+from mqtt import MqttMessage
+
 REQUIREMENTS = ['bluepy', 'interruptingcow']
 
 # Bluepy might need special settings
@@ -10,10 +12,7 @@ class MiscaleWorker():
     self._mac = mac
 
   def status_update(self):
-    return [{
-      'topic': 'weight/kg',
-      'payload': self._get_weight(),
-    }]
+    return [MqttMessage(topic='weight/kg', payload= self._get_weight())]
 
   def _get_weight(self):
     from bluepy import btle

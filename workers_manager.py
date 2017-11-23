@@ -9,7 +9,7 @@ class WorkersManager:
   def update(self, worker_name):
     messages = self.workers[worker_name].status_update()
     for message in messages:
-      message['topic'] = '/'.join([self._config[worker_name]['topic_prefix'], message['topic']])
+      message.topic = '/'.join([self._config[worker_name]['topic_prefix'], message.topic])
 
     return messages
 

@@ -1,3 +1,5 @@
+from mqtt import MqttMessage
+
 REQUIREMENTS = ['python-eq3bt']
 
 monitoredAttrs = ["low_battery", "valve_state", "target_temperature"]
@@ -24,20 +26,10 @@ class ThermostatWorker:
       thermostat.update()
 
       for attr in monitoredAttrs:
-        ret.append({
-          'topic': self.format_topic(name, attr),
-          'payload': getattr(thermostat, attr),
-        })
+        ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=getattr(thermostat, attr)))
 
-      ret.append({
-        'topic': self.format_topic(name, 'mode'),
-        'payload': haModesMapping[thermostat.mode],
-      })
-
-      ret.append({
-        'topic': self.format_topic(name, 'away'),
-        'payload': 'ON' if thermostat.mode == Mode.Away else 'OFF'
-      })
+      ret.append(MqttMessage(topic=self.format_topic(name, 'mode'), payload=haModesMapping[thermostat.mode]))
+      ret.append(MqttMessage(topic=self.format_topic(name, 'away'), payload='ON' if thermostat.mode == Mode.Away else 'OFF'))
 
     return ret
 
