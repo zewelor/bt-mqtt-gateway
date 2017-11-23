@@ -2,6 +2,9 @@ import time
 
 REQUIREMENTS = ['bluepy', 'interruptingcow']
 
+# Bluepy might need special settings
+# sudo setcap 'cap_net_raw,cap_net_admin+eip' /usr/local/lib/python3.6/dist-packages/bluepy/bluepy-helper
+
 class MiscaleWorker():
   def __init__(self, mac):
     self._mac = mac
@@ -11,7 +14,6 @@ class MiscaleWorker():
       'topic': 'weight/kg',
       'payload': self._get_weight(),
     }]
-
 
   def _get_weight(self):
     from bluepy import btle
