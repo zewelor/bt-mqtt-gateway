@@ -1,3 +1,2 @@
 paho-mqtt
-python-eq3bt
 pyyaml

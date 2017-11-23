@@ -1,22 +1,23 @@
-from eq3bt import Thermostat, Mode
-
-haModesMapping = {
-    Mode.Closed: 'off',
-    Mode.Open: 'on',
-    Mode.Auto: 'auto',
-    Mode.Manual: 'manual',
-    Mode.Away: 'away',
-    Mode.Boost: 'boost',
-}
+REQUIREMENTS = ['python-eq3bt']
 
 monitoredAttrs = ["low_battery", "valve_state", "target_temperature"]
 
 class ThermostatWorker:
-  def __init__(self, devices=None, topic_prefix=None):
+  def __init__(self, devices=None):
     self._devices = devices
-    self._topic_prefix = topic_prefix
 
   def status_update(self):
+    from eq3bt import Thermostat, Mode
+
+    haModesMapping = {
+      Mode.Closed: 'off',
+      Mode.Open: 'on',
+      Mode.Auto: 'auto',
+      Mode.Manual: 'manual',
+      Mode.Away: 'away',
+      Mode.Boost: 'boost',
+    }
+
     ret = []
     for name, mac in self.devices.items():
       thermostat = Thermostat(mac)
@@ -44,9 +45,5 @@ class ThermostatWorker:
   def devices(self):
     return self._devices
 
-  @property
-  def topic_prefix(self):
-    return self._topic_prefix
-
   def format_topic(self, device, attr):
-    return '/'.join([self.topic_prefix, device, attr])
+    return '/'.join([device, attr])

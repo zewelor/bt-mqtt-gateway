@@ -4,8 +4,6 @@ from workers_manager import WorkersManager
 
 mqtt = MqttClient(settings['mqtt'])
 
-workers = WorkersManager(settings['workers'])
-mqtt.publish(workers.get_updates())
-
-# args = settings['workers']['thermostat']['args']
-# mqtt.publish(ThermostatWorker(**args).status_update())
+manager = WorkersManager(settings['workers'])
+for worker_name in manager.workers.keys():
+  mqtt.publish(manager.update(worker_name))
