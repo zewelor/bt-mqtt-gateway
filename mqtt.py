@@ -1,11 +1,12 @@
+from logger import _LOGGER
 import paho.mqtt.publish as publish
-
 
 class MqttClient:
   def __init__(self, config):
     self._config = config
 
   def publish(self, messages):
+    _LOGGER.debug(messages)
     publish.multiple(list(map(lambda m: m.as_dict, messages)),
                      hostname=self.hostname,
                      auth={'username': self.username, 'password': self.password})
@@ -46,3 +47,9 @@ class MqttMessage:
       'topic': self.topic,
       'payload': self.payload
     }
+
+  def __repr__(self):
+    return  self.as_dict.__str__()
+
+  def __str__(self):
+    return self.__repr__()
