@@ -5,7 +5,7 @@ REQUIREMENTS = ['python-eq3bt']
 monitoredAttrs = ["low_battery", "valve_state", "target_temperature"]
 
 class ThermostatWorker:
-  def __init__(self, devices=None):
+  def __init__(self, devices):
     self._devices = devices
 
   def status_update(self):

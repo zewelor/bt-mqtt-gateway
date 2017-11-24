@@ -8,3 +8,4 @@ workers:
       devices:
         bedroom: 00:11:22:33:44:55
     topic_prefix: thermostats
+    update_interval: 60
