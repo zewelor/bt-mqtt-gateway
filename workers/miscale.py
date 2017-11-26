@@ -2,23 +2,22 @@ import time
 from interruptingcow import timeout
 
 from mqtt import MqttMessage
+from workers.base import BaseWorker
 
 REQUIREMENTS = ['bluepy']
+
 
 # Bluepy might need special settings
 # sudo setcap 'cap_net_raw,cap_net_admin+eip' /usr/local/lib/python3.6/dist-packages/bluepy/bluepy-helper
 
-class MiscaleWorker():
-  def __init__(self, mac):
-    self._mac = mac
-
+class MiscaleWorker(BaseWorker):
   def status_update(self):
     return [MqttMessage(topic='weight/kg', payload=self._get_weight())]
 
   def _get_weight(self):
     from bluepy import btle
 
-    scan_processor = ScanProcessor(self._mac)
+    scan_processor = ScanProcessor(self.mac)
     scanner = btle.Scanner().withDelegate(scan_processor)
     scanner.scan(5, passive=True)
 
@@ -28,6 +27,7 @@ class MiscaleWorker():
       return scan_processor.weight
 
     return -1
+
 
 class ScanProcessor():
   def __init__(self, mac):

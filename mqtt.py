@@ -1,12 +1,11 @@
-from logger import _LOGGER
 import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 
 class MqttClient:
   def __init__(self, config):
     self._config = config
 
   def publish(self, messages):
-    _LOGGER.debug(messages)
     publish.multiple(list(map(lambda m: m.as_dict, messages)),
                      hostname=self.hostname,
                      auth={'username': self.username, 'password': self.password})
@@ -23,6 +22,17 @@ class MqttClient:
   def password(self):
     return self._config['password']
 
+  def callbacks_subscription(self, callbacks):
+    mqttc = mqtt.Client()
+
+    mqttc.username_pw_set(self.username, self.password)
+    mqttc.connect(self.hostname)
+
+    for topic, callback in callbacks:
+      mqttc.message_callback_add(topic, callback)
+      mqttc.subscribe(topic)
+
+    mqttc.loop_start()
 
 class MqttMessage:
   def __init__(self, topic=None, payload=None):

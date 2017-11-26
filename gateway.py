@@ -6,11 +6,10 @@ if sys.version_info < (3,4):
 
 from logger import _LOGGER
 import argparse
-from queue import Queue
+from workers_queue import _WORKERS_QUEUE
 from config import settings
 from mqtt import MqttClient
 from workers_manager import WorkersManager
-from apscheduler.schedulers.background import BackgroundScheduler
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--debug', action='store_true', default=False)
@@ -21,31 +20,21 @@ if parsed.debug:
 else:
   _LOGGER.setLevel(logging.INFO)
 
-queue = Queue()
-scheduler = BackgroundScheduler()
-mqtt = MqttClient(settings['mqtt'])
-manager = WorkersManager(settings['workers'])
-
 _LOGGER.info('Starting')
 
-for worker_name, interval in manager.interval_enabled_workers.items():
-  _LOGGER.debug("Added: %s with %d seconds interval" % (worker_name, interval))
-  queue.put([worker_name])
-  scheduler.add_job(lambda x: queue.put([x]), 'interval', seconds=interval, args=[worker_name])
-
-scheduler.start()
+mqtt = MqttClient(settings['mqtt'])
+manager = WorkersManager(settings['workers'], mqtt)
 
 running = True
 
 try:
   while running:
-    for worker_name in queue.get(block=True):
       try:
-        mqtt.publish(manager.update(worker_name))
+        mqtt.publish(_WORKERS_QUEUE.get(block=True).execute())
       except (KeyboardInterrupt, SystemExit):
         raise
-      except:
-        _LOGGER.info('Some error')
+      except Exception as e:
+        _LOGGER.exception(e)
 except KeyboardInterrupt:
   running = False
   _LOGGER.info('Exiting allowing jobs to finish. If you need force exit use kill')
