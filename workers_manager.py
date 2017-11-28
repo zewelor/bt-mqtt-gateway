@@ -7,7 +7,7 @@ from workers_queue import _WORKERS_QUEUE
 
 class WorkersManager:
   class Command:
-    def __init__(self, callback, args=[], options={}):
+    def __init__(self, callback, args=(), options=dict()):
       self._callback = callback
       self._args = args
       self._options = options
@@ -20,43 +20,39 @@ class WorkersManager:
       _LOGGER.debug(messages)
       return messages
 
-  def __init__(self, config, mqtt):
-    self._mqtt = mqtt
-    self._workers = self._register_klasses(config)
-
-  @property
-  def workers(self):
-    return self._workers
-
-  def _register_klasses(self, config):
-    arr = {}
+  @classmethod
+  def start(cls, mqtt, config):
     scheduler = BackgroundScheduler()
     mqtt_callbacks = []
 
     for (worker_name, worker_config) in config.items():
-      moduleObj = importlib.import_module("workers.%s" % worker_name)
-      klass = getattr(moduleObj, "%sWorker" % worker_name.title())
+      module_obj = importlib.import_module("workers.%s" % worker_name)
+      klass = getattr(module_obj, "%sWorker" % worker_name.title())
       worker_obj = klass(**worker_config['args'])
 
-      if moduleObj.REQUIREMENTS is not None:
-        self._pip_install_helper(moduleObj.REQUIREMENTS)
+      if module_obj.REQUIREMENTS is not None:
+        cls._pip_install_helper(module_obj.REQUIREMENTS)
 
       if 'update_interval' in worker_config:
         _LOGGER.debug("Added: %s with %d seconds interval" % (worker_name, worker_config['update_interval']))
-        _WORKERS_QUEUE.put(self.Command(worker_obj.status_update, []))
-        scheduler.add_job(lambda x: _WORKERS_QUEUE.put(self.Command(worker_obj.status_update, [])), 'interval', seconds=worker_config['update_interval'], args=[worker_name])
+        _WORKERS_QUEUE.put(cls.Command(worker_obj.status_update, []))
+        scheduler.add_job(
+          lambda x: _WORKERS_QUEUE.put(cls.Command(worker_obj.status_update, [])), 'interval',
+          seconds=worker_config['update_interval'],
+          args=[worker_name]
+        )
 
       if 'topic_subscription' in worker_config:
         _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'] + '/#')
-        mqtt_callbacks.append((worker_config['topic_subscription'] + '/#', lambda client, _ , c: _WORKERS_QUEUE.put(self.Command(worker_obj.on_command, [c.topic, c.payload]))))
-
-      arr[worker_name] = worker_obj
+        mqtt_callbacks.append((
+          worker_config['topic_subscription'] + '/#',
+          lambda client, _ , c: _WORKERS_QUEUE.put(cls.Command(worker_obj.on_command, [c.topic, c.payload]))
+        ))
 
     scheduler.start()
-    self._mqtt.callbacks_subscription(mqtt_callbacks)
+    mqtt.callbacks_subscription(mqtt_callbacks)
 
-    return arr
-
-  def _pip_install_helper(self, package_names):
+  @staticmethod
+  def _pip_install_helper(package_names):
     for package in package_names:
       pip.main(['install', '-q', package])

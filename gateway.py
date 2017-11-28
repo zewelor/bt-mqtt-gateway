@@ -1,5 +1,8 @@
+#!/usr/bin/python
+
 import logging
 import sys
+
 if sys.version_info < (3,4):
   print("To use this script you need python 3.4 or newer! got %s" % sys.version_info)
   sys.exit(1)
@@ -20,10 +23,10 @@ if parsed.debug:
 else:
   _LOGGER.setLevel(logging.INFO)
 
-_LOGGER.info('Starting')
+_LOGGER.debug('Starting')
 
 mqtt = MqttClient(settings['mqtt'])
-manager = WorkersManager(settings['workers'], mqtt)
+WorkersManager.start(mqtt, settings['workers'])
 
 running = True
 
@@ -38,3 +41,4 @@ try:
 except KeyboardInterrupt:
   running = False
   _LOGGER.info('Exiting allowing jobs to finish. If you need force exit use kill')
+
