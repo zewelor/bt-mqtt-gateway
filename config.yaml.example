@@ -7,6 +7,6 @@ workers:
     args:
       devices:
         bedroom: 00:11:22:33:44:55
-    topic_prefix: thermostat
-    topic_subscription: thermostat
+      topic_prefix: thermostat
+    topic_subscription: thermostat/+/+/set
     update_interval: 60

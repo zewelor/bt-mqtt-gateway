@@ -64,7 +64,7 @@ class ThermostatWorker(BaseWorker):
     return ret
 
   def on_command(self, topic, value):
-    _, device_name, method = topic.split('/')
+    _, device_name, method, _ = topic.split('/')
     thermostat = self.devices[device_name]
 
     if method == STATE_AWAY:
@@ -94,6 +94,3 @@ class ThermostatWorker(BaseWorker):
 
   def device_for(self, mac):
     return eq3bt.Thermostat(mac)
-
-  def format_topic(self, device, attr):
-    return '/'.join([device, attr])

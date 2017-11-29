@@ -44,9 +44,9 @@ class WorkersManager:
         )
 
       if 'topic_subscription' in worker_config:
-        _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'] + '/#')
+        _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'])
         mqtt_callbacks.append((
-          worker_config['topic_subscription'] + '/#',
+          worker_config['topic_subscription'],
           lambda client, _ , c: _WORKERS_QUEUE.put(cls.Command(worker_obj.on_command, [c.topic, c.payload]))
         ))
 
