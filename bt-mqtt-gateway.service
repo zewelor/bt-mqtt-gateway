@@ -1,0 +1,12 @@
+[Unit]
+Description=Bluetooth MQTT gateway
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user/bt-mqtt-gateway
+ExecStart=/home/user/bt-mqtt-gateway/gateway.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
