@@ -12,7 +12,7 @@ REQUIREMENTS = ['bluepy']
 
 class MiscaleWorker(BaseWorker):
   def status_update(self):
-    return [MqttMessage(topic='weight/kg', payload=self._get_weight())]
+    return [MqttMessage(topic=self.format_topic('weight/kg'), payload=self._get_weight())]
 
   def _get_weight(self):
     from bluepy import btle
