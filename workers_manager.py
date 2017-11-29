@@ -28,10 +28,11 @@ class WorkersManager:
     for (worker_name, worker_config) in config.items():
       module_obj = importlib.import_module("workers.%s" % worker_name)
       klass = getattr(module_obj, "%sWorker" % worker_name.title())
-      worker_obj = klass(**worker_config['args'])
 
       if module_obj.REQUIREMENTS is not None:
         cls._pip_install_helper(module_obj.REQUIREMENTS)
+
+      worker_obj = klass(**worker_config['args'])
 
       if 'update_interval' in worker_config:
         _LOGGER.debug("Added: %s with %d seconds interval" % (worker_name, worker_config['update_interval']))

@@ -1,4 +1,5 @@
 from builtins import staticmethod
+
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
@@ -12,26 +13,25 @@ STATE_MANUAL = 'manual'
 
 class ThermostatWorker(BaseWorker):
   class ModesMapper():
-    from eq3bt import Mode
+    def __init__(self):
+      from eq3bt import Mode
 
-    MAPPED_MODES = {
-      Mode.Closed: 'off',
-      Mode.Open: 'on',
-      Mode.Auto: 'auto',
-      Mode.Manual: STATE_MANUAL,
-      Mode.Away: STATE_AWAY,
-      Mode.Boost: STATE_BOOST,
-    }
+      self._mapped_modes = {
+        Mode.Closed: 'off',
+        Mode.Open: 'on',
+        Mode.Auto: 'auto',
+        Mode.Manual: STATE_MANUAL,
+        Mode.Away: STATE_AWAY,
+        Mode.Boost: STATE_BOOST,
+      }
 
-    REVERSED_MODES = {v: k for k, v in MAPPED_MODES.items()}
+      self._reverse_modes = {v: k for k, v in self._mapped_modes.items()}
 
-    @classmethod
-    def get_mapping(cls, mode):
-      return cls.MAPPED_MODES[mode]
+    def get_mapping(self, mode):
+      return self._mapped_modes[mode]
 
-    @classmethod
-    def get_reverse_mapping(cls, mode):
-      return cls.REVERSED_MODES[mode]
+    def get_reverse_mapping(self, mode):
+      return self._reverse_modes[mode]
 
     @staticmethod
     def away_mode_on_off(mode):
@@ -54,6 +54,7 @@ class ThermostatWorker(BaseWorker):
     for name, mac in self.devices.items():
       self.devices[name] = Thermostat(mac)
 
+    self._modes_mapper = self.ModesMapper()
 
   def status_update(self):
     ret = []
@@ -72,7 +73,7 @@ class ThermostatWorker(BaseWorker):
 
     # It needs to be on separate if because first if can change method
     if method == "mode":
-      value = ModesMapper.get_reverse_mapping(value)
+      value = self._modes_mapper.get_reverse_mapping(value)
     elif method == "target_temperature":
       value = float(value)
 
@@ -86,7 +87,7 @@ class ThermostatWorker(BaseWorker):
     for attr in monitoredAttrs:
       ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=getattr(thermostat, attr)))
 
-    ret.append(MqttMessage(topic=self.format_topic(name, 'mode'), payload=self.ModesMapper.get_mapping(thermostat.mode)))
+    ret.append(MqttMessage(topic=self.format_topic(name, 'mode'), payload=self._modes_mapper.get_mapping(thermostat.mode)))
     ret.append(MqttMessage(topic=self.format_topic(name, 'away'), payload=self.ModesMapper.away_mode_on_off(thermostat.mode)))
 
     return ret
