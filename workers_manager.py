@@ -54,12 +54,13 @@ class WorkersManager:
           lambda client, _ , c: self._queue_command(self.Command(worker_obj.on_command, [c.topic, c.payload]))
         ))
 
-    for (callback_name, options) in config['topic_subcription'].items():
-      _LOGGER.debug("Subscribing to: %s with command: %s" % (options['topic'], callback_name))
-      self._mqtt_callbacks.append((
-        options['topic'],
-        lambda client, _ , c: self._queue_if_matching_payload(self.Command(getattr(self, callback_name)), c.payload, options['payload']))
-      )
+    if 'topic_subscription' in config:
+      for (callback_name, options) in config['topic_subcription'].items():
+        _LOGGER.debug("Subscribing to: %s with command: %s" % (options['topic'], callback_name))
+        self._mqtt_callbacks.append((
+          options['topic'],
+          lambda client, _ , c: self._queue_if_matching_payload(self.Command(getattr(self, callback_name)), c.payload, options['payload']))
+        )
 
     return self
 
