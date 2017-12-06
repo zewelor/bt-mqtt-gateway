@@ -1,11 +1,15 @@
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 
+
 class MqttClient:
   def __init__(self, config):
     self._config = config
 
   def publish(self, messages):
+    if messages is None:
+      return
+
     publish.multiple(list(map(lambda m: m.as_dict, messages)),
                      hostname=self.hostname,
                      auth={'username': self.username, 'password': self.password})
@@ -34,6 +38,7 @@ class MqttClient:
 
     mqttc.loop_start()
 
+
 class MqttMessage:
   def __init__(self, topic=None, payload=None):
     self._topic = topic
@@ -59,7 +64,7 @@ class MqttMessage:
     }
 
   def __repr__(self):
-    return  self.as_dict.__str__()
+    return self.as_dict.__str__()
 
   def __str__(self):
     return self.__repr__()

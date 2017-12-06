@@ -28,6 +28,8 @@ class ThermostatWorker(BaseWorker):
       self._reverse_modes = {v: k for k, v in self._mapped_modes.items()}
 
     def get_mapping(self, mode):
+      if mode < 0:
+        return None
       return self._mapped_modes[mode]
 
     def get_reverse_mapping(self, mode):
@@ -66,6 +68,8 @@ class ThermostatWorker(BaseWorker):
   def on_command(self, topic, value):
     _, device_name, method, _ = topic.split('/')
     thermostat = self.devices[device_name]
+
+    value = value.decode('utf-8')
 
     if method == STATE_AWAY:
       method = "mode"

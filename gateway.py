@@ -26,7 +26,7 @@ else:
 _LOGGER.debug('Starting')
 
 mqtt = MqttClient(settings['mqtt'])
-WorkersManager.start(mqtt, settings['workers'])
+WorkersManager().register_workers(settings['manager']).start(mqtt)
 
 running = True
 
