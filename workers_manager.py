@@ -65,8 +65,8 @@ class WorkersManager:
     return self
 
   def start(self, mqtt):
-    self._scheduler.start()
     mqtt.callbacks_subscription(self._mqtt_callbacks)
+    self._scheduler.start()
     self.update_all()
 
   def _queue_if_matching_payload(self, command, payload, expected_payload):
