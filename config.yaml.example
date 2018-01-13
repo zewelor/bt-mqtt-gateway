@@ -9,6 +9,11 @@ manager:
       topic: homeassistant/status
       payload: online
   workers:
+    mysensors:
+      args:
+        port: /dev/ttyUSB0
+        baudrate: 9600
+        topic_prefix: mysensors/out
     thermostat:
       args:
         devices:

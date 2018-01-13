@@ -1,4 +1,6 @@
 import importlib
+import threading
+
 import pip
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
@@ -24,6 +26,7 @@ class WorkersManager:
     self._mqtt_callbacks = []
     self._update_commands = []
     self._scheduler = BackgroundScheduler()
+    self._daemons = []
 
   def register_workers(self, config):
     for (worker_name, worker_config) in config['workers'].items():
@@ -46,6 +49,11 @@ class WorkersManager:
             seconds=worker_config['update_interval'],
             args=[worker_name]
           )
+      elif hasattr(worker_obj, 'run'):
+        _LOGGER.debug("Registered: %s as daemon" % (worker_name))
+        self._daemons.append(worker_obj)
+      else:
+        raise "%s cannot be initialized, it has to define run or status_update method" % worker_name
 
       if 'topic_subscription' in worker_config:
         _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'])
@@ -68,14 +76,12 @@ class WorkersManager:
     mqtt.callbacks_subscription(self._mqtt_callbacks)
     self._scheduler.start()
     self.update_all()
+    for daemon in self._daemons:
+      threading.Thread(target=daemon.run, args=[mqtt], daemon=True).start()
 
   def _queue_if_matching_payload(self, command, payload, expected_payload):
     if payload.decode('utf-8') == expected_payload:
       self._queue_command(command)
-
-  @property
-  def mqtt_callbacks(self):
-    return self._mqtt_callbacks
 
   def update_all(self):
     _LOGGER.debug("Updating all workers")
