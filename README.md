@@ -31,23 +31,7 @@ Install requirements
 pip install -r requirements.txt
 ```
 
-Run
-
-```
-gateway.py
-```
-
----
-
-As an example, we can use use [python-eq3bt](https://github.com/rytilahti/python-eq3bt) with the example config included here.
-
-Install python-eq3bt
-
-```
-pip install python-eq3bt
-```
-
-Copy config file
+Copy and customize config file
 
 ```
 cp config.yaml.example config.yaml
@@ -58,7 +42,6 @@ Run
 ```
 ./gateway.py
 ```
-
 
 ## Deployment
 
