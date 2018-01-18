@@ -16,7 +16,7 @@ class WorkersManager:
 
     def execute(self):
       messages = []
-      with timeout(30):
+      with timeout(35):
         messages = self._callback(*self._args)
 
       _LOGGER.debug(messages)

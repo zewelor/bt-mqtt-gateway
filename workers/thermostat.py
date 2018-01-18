@@ -1,5 +1,6 @@
 from builtins import staticmethod
 
+from interruptingcow import timeout
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
@@ -61,7 +62,10 @@ class ThermostatWorker(BaseWorker):
   def status_update(self):
     ret = []
     for name, thermostat in self.devices.items():
-      ret += self.update_device_state(name, thermostat)
+      try:
+        ret += self.update_device_state(name, thermostat)
+      except RuntimeError:
+        pass
 
     return ret
 
@@ -84,6 +88,7 @@ class ThermostatWorker(BaseWorker):
     setattr(thermostat, method, value)
     return self.update_device_state(device_name, thermostat)
 
+  @timeout(8.0)
   def update_device_state(self, name, thermostat):
     thermostat.update()
 
