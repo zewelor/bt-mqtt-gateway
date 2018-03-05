@@ -63,7 +63,7 @@ class WorkersManager:
         ))
 
     if 'topic_subscription' in config:
-      for (callback_name, options) in config['topic_subcription'].items():
+      for (callback_name, options) in config['topic_subscription'].items():
         _LOGGER.debug("Subscribing to: %s with command: %s" % (options['topic'], callback_name))
         self._mqtt_callbacks.append((
           options['topic'],

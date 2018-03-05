@@ -4,7 +4,7 @@ mqtt:
   password: password
 
 manager:
-  topic_subcription:
+  topic_subscription:
     update_all:
       topic: homeassistant/status
       payload: online
