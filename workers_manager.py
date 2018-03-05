@@ -4,6 +4,7 @@ import threading
 import pip
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
+from functools import partial
 from logger import _LOGGER
 from workers_queue import _WORKERS_QUEUE
 
@@ -59,7 +60,7 @@ class WorkersManager:
         _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'])
         self._mqtt_callbacks.append((
           worker_config['topic_subscription'],
-          lambda client, _ , c: self._queue_command(self.Command(worker_obj.on_command, [c.topic, c.payload]))
+          partial(self._on_command_wrapper, worker_obj)
         ))
 
     if 'topic_subscription' in config:
@@ -96,3 +97,6 @@ class WorkersManager:
   def _pip_install_helper(package_names):
     for package in package_names:
       pip.main(['install', '-q', package])
+
+  def _on_command_wrapper(self, worker_obj, client, _, c):
+    self._queue_command(self.Command(worker_obj.on_command, [c.topic, c.payload]))
