@@ -46,9 +46,8 @@ class WorkersManager:
 
         if 'update_interval' in worker_config:
           self._scheduler.add_job(
-            lambda x: self._queue_command(command), 'interval',
+            partial(self._queue_command, command), 'interval',
             seconds=worker_config['update_interval'],
-            args=[worker_name]
           )
       elif hasattr(worker_obj, 'run'):
         _LOGGER.debug("Registered: %s as daemon" % (worker_name))
