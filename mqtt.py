@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 class MqttClient:
   def __init__(self, config):
     self._config = config
-    self._mqttc = mqtt.Client()
+    self._mqttc = mqtt.Client(client_id='bt-mqtt-gateway', clean_session=False)
 
   def publish(self, messages):
     if messages is None:

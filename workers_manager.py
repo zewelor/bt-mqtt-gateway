@@ -98,4 +98,5 @@ class WorkersManager:
       pip.main(['install', '-q', package])
 
   def _on_command_wrapper(self, worker_obj, client, _, c):
+    _LOGGER.debug("on command wrapper for with %s: %s", c.topic, c.payload)
     self._queue_command(self.Command(worker_obj.on_command, [c.topic, c.payload]))
