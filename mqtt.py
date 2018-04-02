@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 class MqttClient:
   def __init__(self, config):
     self._config = config
+    self._mqttc = mqtt.Client()
 
   def publish(self, messages):
     if messages is None:
@@ -26,17 +27,19 @@ class MqttClient:
   def password(self):
     return self._config['password']
 
-  def callbacks_subscription(self, callbacks):
-    mqttc = mqtt.Client()
+  @property
+  def mqttc(self):
+    return self._mqttc
 
-    mqttc.username_pw_set(self.username, self.password)
-    mqttc.connect(self.hostname)
+  def callbacks_subscription(self, callbacks):
+    self.mqttc.username_pw_set(self.username, self.password)
+    self.mqttc.connect(self.hostname)
 
     for topic, callback in callbacks:
-      mqttc.message_callback_add(topic, callback)
-      mqttc.subscribe(topic)
+      self.mqttc.message_callback_add(topic, callback)
+      self.mqttc.subscribe(topic)
 
-    mqttc.loop_start()
+    self.mqttc.loop_start()
 
 
 class MqttMessage:
