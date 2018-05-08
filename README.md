@@ -6,6 +6,8 @@ Python script which creates a Bluetooth to MQTT gateway. Includes example config
 
 * [EQ3 Bluetooth smart thermostat](http://www.eq-3.com/products/eqiva/bluetooth-smart-radiator-thermostat.html) via [python-eq3bt](https://github.com/rytilahti/python-eq3bt)
 * [Xiaomi Mi Scale](http://www.mi.com/en/scale/)
+* [Linak Desk](https://www.linak.com/business-areas/desks/office-desks/) via [linak_bt_desk](https://github.com/zewelor/linak_bt_desk)
+* [MySensors](https://www.mysensors.org/)
 
 ## Getting Started
 
