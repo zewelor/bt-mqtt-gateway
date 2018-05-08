@@ -14,7 +14,9 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 ```
-python
+python3
+pip3
+python3-serial
 ```
 
 ### Installing
