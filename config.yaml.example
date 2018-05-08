@@ -21,3 +21,13 @@ manager:
         topic_prefix: thermostat
       topic_subscription: thermostat/+/+/set
       update_interval: 60
+    miscale:
+      args:
+        mac: 00:11:22:33:44:55
+        topic_prefix: miscale
+      update_interval: 1800
+    linakdesk:
+      args:
+        mac: 00:11:22:33:44:55
+        topic_prefix: linak_desk
+      update_interval: 1800
