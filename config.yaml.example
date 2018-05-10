@@ -31,3 +31,10 @@ manager:
         mac: 00:11:22:33:44:55
         topic_prefix: linak_desk
       update_interval: 1800
+    miflora:
+      args:
+        devices:
+          herbs: 00:11:22:33:44:55
+        topic_prefix: miflora
+      update_interval: 300
+
