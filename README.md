@@ -18,6 +18,7 @@ A simple Python script which provides a Bluetooth to MQTT gateway, easily extens
 * [Xiaomi Mi Scale](http://www.mi.com/en/scale/)
 * [Linak Desk](https://www.linak.com/business-areas/desks/office-desks/) via [linak_bt_desk](https://github.com/zewelor/linak_bt_desk)
 * [MySensors](https://www.mysensors.org/)
+* [Xiaomi Mi Flora plant sensor](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) via [miflora](https://github.com/open-homeautomation/miflora)
 
 ## Getting Started
 

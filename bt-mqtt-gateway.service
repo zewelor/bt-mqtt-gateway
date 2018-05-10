@@ -1,5 +1,6 @@
 [Unit]
 Description=Bluetooth MQTT gateway
+Documentation=https://github.com/zewelor/bt-mqtt-gateway
 After=network.target
 
 [Service]
