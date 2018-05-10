@@ -1,8 +1,18 @@
 # bt-mqtt-gateway
 
-Python script which creates a Bluetooth to MQTT gateway. Includes example config for a Bluetooth thermostat.
+A simple Python script which provides a Bluetooth to MQTT gateway, easily extensible via custom workers.
 
-## Supported devices
+## Features
+
+* Highly extensible via custom workers
+* Data publication via MQTT
+* Configurable topic and payload
+* MQTT authentication support
+* Systemd service
+* Reliable and intuitive
+* Tested on Raspberry Pi Zero W
+
+### Supported devices
 
 * [EQ3 Bluetooth smart thermostat](http://www.eq-3.com/products/eqiva/bluetooth-smart-radiator-thermostat.html) via [python-eq3bt](https://github.com/rytilahti/python-eq3bt)
 * [Xiaomi Mi Scale](http://www.mi.com/en/scale/)
@@ -15,64 +25,79 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-```
-python3
-pip3
-python3-serial
-```
+* `python3`
+* `pip3`
+* `python3-serial` (MySensors specific)
 
-### Installing
+## Installation
 
-Clone repo
+On a modern Linux system, just a few steps are needed to get the gateway working.
+The following example shows the installation under Debian/Raspbian:
 
-```
+```shell
+sudo apt-get install git python3 python3-pip bluetooth bluez
 git clone https://github.com/zewelor/bt-mqtt-gateway.git
+cd bt-mqtt-gateway
+pip3 install -r requirements.txt
 ```
 
-Install requirements
+## Configuration
 
-```
-pip install -r requirements.txt
-```
+All worker configuration is done in the file [`config.yaml`](config.yaml.example).
+This file needs to be created first:
 
-Copy and customize config file
-
-```
+```shell
 cp config.yaml.example config.yaml
-```
-
-Run
-
-```
+vim config.yaml
 ./gateway.py
+```
+
+**Attention:**
+You need to add at least one worker to your configuration.
+Scan for available Bluetooth devices in your proximity with the command:
+
+```shell
+sudo hcitool lescan
+```
+
+## Execution
+
+A test run is as easy as:
+
+```shell
+sudo ./gateway.py
+```
+
+Debug output can be displayed using the `-d` argument:
+
+```shell
+sudo ./gateway.py -d
 ```
 
 ## Deployment
 
-This project includes an example Systemd service unit. In order to use it, copy `bt-mqtt-gateway.service` to `/etc/systemd/system/`. Edit the new file to use the correct absolute script paths and enable/start it.
-
-```
+Continuous background execution can be done using the example Systemd service unit provided.
+   
+```shell
+sudo cp bt-mqtt-gateway.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start bt-mqtt-gateway
+sudo systemctl status bt-mqtt-gateway
 sudo systemctl enable bt-mqtt-gateway
 ```
 
-```
-sudo systemctl start bt-mqtt-gateway
-```
+## Custom worker development
+
+
 
 ## Built With
 
 * [Python](https://www.python.org/) - The high-level programming language for general-purpose programming
 
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
 ## Authors
 
 * [**zewelor**](https://github.com/zewelor) - *Initial work*
 * [**bbbenji**](https://github.com/bbbenji) - *Minor contributions*
-
 
 ## License
 
