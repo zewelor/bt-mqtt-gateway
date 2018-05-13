@@ -39,7 +39,7 @@ The following example shows the installation under Debian/Raspbian:
 sudo apt-get install git python3 python3-pip bluetooth bluez
 git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 ```
 
 ## Configuration
