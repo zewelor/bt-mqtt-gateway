@@ -2,16 +2,15 @@ from interruptingcow import timeout
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
-from miflora.miflora_poller import MiFloraPoller, \
-  MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
-from btlewrap.bluepy import BluepyBackend
-
 REQUIREMENTS = ['miflora']
 
 monitoredAttrs = ["temperature", "moisture", "light", "conductivity", "battery"]
 
 class MifloraWorker(BaseWorker):
   def _setup(self):
+    from miflora.miflora_poller import MiFloraPoller
+    from btlewrap.bluepy import BluepyBackend
+
 
     for name, mac in self.devices.items():
       self.devices[name] = MiFloraPoller(mac, BluepyBackend)
