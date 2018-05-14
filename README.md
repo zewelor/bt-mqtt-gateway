@@ -1,6 +1,7 @@
 # bt-mqtt-gateway
 
-A simple Python script which provides a Bluetooth to MQTT gateway, easily extensible via custom workers.
+A simple Python script which provides a Bluetooth to MQTT gateway, easily extensible via custom workers.  
+See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information.
 
 ## Features
 
@@ -81,11 +82,15 @@ Continuous background execution can be done using the example Systemd service un
    
 ```shell
 sudo cp bt-mqtt-gateway.service /etc/systemd/system/
+sudo vim /etc/systemd/system/bt-mqtt-gateway.service
 sudo systemctl daemon-reload
 sudo systemctl start bt-mqtt-gateway
 sudo systemctl status bt-mqtt-gateway
 sudo systemctl enable bt-mqtt-gateway
 ```
+
+**Attention:**
+You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service`.
 
 ## Custom worker development
 
