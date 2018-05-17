@@ -27,6 +27,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
+* `bluez` (≥ 5.49 recommended)
 * `python3`
 * `pip3`
 * `python3-serial` (MySensors specific)
