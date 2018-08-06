@@ -13,8 +13,12 @@ class MqttClient:
       self._auth = None
 
   def publish(self, messages):
-    if messages is None:
+    if messages is None or len(messages) == 0:
       return
+    
+    if self.topic_prefix is not None:
+      for m in messages:
+        m.topic = "{}/{}".format(self.topic_prefix, m.topic)
     
     publish.multiple(list(map(lambda m: m.as_dict, messages)),
                      hostname=self.hostname,
@@ -36,6 +40,10 @@ class MqttClient:
   @property
   def password(self):
     return self._config['password'] if 'password' in self._config else None
+
+  @property
+  def topic_prefix(self):
+    return self._config['topic_prefix'] if 'topic_prefix' in self._config else None
 
   @property
   def mqttc(self):
