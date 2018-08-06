@@ -1,7 +1,7 @@
 import importlib
 import threading
 
-import pip
+from pip._internal import main as pip_main
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
 from functools import partial
@@ -95,7 +95,7 @@ class WorkersManager:
   @staticmethod
   def _pip_install_helper(package_names):
     for package in package_names:
-      pip.main(['install', '-q', package])
+      pip_main(['install', '-q', package])
 
   def _on_command_wrapper(self, worker_obj, client, _, c):
     _LOGGER.debug("on command wrapper for with %s: %s", c.topic, c.payload)

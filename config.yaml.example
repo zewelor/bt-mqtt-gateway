@@ -1,7 +1,9 @@
 mqtt:
   host: 192.168.1.1
+  port: 1883
   username: user
   password: password
+  topic_prefix: hostname
 
 manager:
   topic_subscription:
@@ -38,3 +40,9 @@ manager:
         topic_prefix: miflora
       update_interval: 300
 
+    mithermometer:
+      args:
+        devices:
+          living_room: 00:11:22:33:44:55
+        topic_prefix: mithermometer
+      update_interval: 300

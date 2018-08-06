@@ -20,6 +20,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * [Linak Desk](https://www.linak.com/business-areas/desks/office-desks/) via [linak_bt_desk](https://github.com/zewelor/linak_bt_desk)
 * [MySensors](https://www.mysensors.org/)
 * [Xiaomi Mi Flora plant sensor](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) via [miflora](https://github.com/open-homeautomation/miflora)
+* Xiaomi Aqara thermometer via [mithermometer](https://github.com/hobbypunk90/mithermometer)
 
 ## Getting Started
 
