@@ -2,7 +2,7 @@ from interruptingcow import timeout
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
-REQUIREMENTS = ['mithermometer']
+REQUIREMENTS = ['mithermometer==0.1.2']
 
 monitoredAttrs = ["temperature", "humidity", "battery"]
 
@@ -32,6 +32,6 @@ class MithermometerWorker(BaseWorker):
     ret = []
     for attr in monitoredAttrs:
 
-      ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=poller.parameter_value(attr)))
+      ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=poller.parameter_value(attr, read_cached=False)))
 
     return ret
