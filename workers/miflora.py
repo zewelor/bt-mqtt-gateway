@@ -2,7 +2,7 @@ from interruptingcow import timeout
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
-REQUIREMENTS = ['miflora']
+REQUIREMENTS = ['git+https://github.com/open-homeautomation/miflora.git@84f39432082796412d05b754c948499a1ad710e7#egg=miflora']
 
 monitoredAttrs = ["temperature", "moisture", "light", "conductivity", "battery"]
 
