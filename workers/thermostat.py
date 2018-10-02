@@ -6,7 +6,7 @@ from workers.base import BaseWorker
 
 REQUIREMENTS = ['python-eq3bt']
 
-monitoredAttrs = ["low_battery", "valve_state", "target_temperature"]
+monitoredAttrs = ["low_battery", "valve_state", "target_temperature", "window_open", "locked"]
 
 STATE_AWAY = 'away'
 STATE_MANUAL = 'manual'
