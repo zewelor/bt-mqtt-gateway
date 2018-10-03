@@ -13,7 +13,7 @@ class MifloraWorker(BaseWorker):
 
 
     for name, mac in self.devices.items():
-      self.devices[name] = MiFloraPoller(mac, BluepyBackend)
+      self.devices[name] = MiFloraPoller(mac, BluepyBackend, cache_timeout=0)
 
   def status_update(self):
     ret = []
