@@ -1,7 +1,12 @@
 import importlib
 import threading
 
-from pip._internal import main as pip_main
+from pip import __version__ as pip_version
+if pip_version > "10.0":
+  from pip._internal import main as pip_main
+else:
+  from pip import main as pip_main
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
 from functools import partial
