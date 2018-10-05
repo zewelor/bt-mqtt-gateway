@@ -2,7 +2,7 @@ import importlib
 import threading
 
 from pip import __version__ as pip_version
-if pip_version > "10.0":
+if int(pip_version.split('.')[0]) > 10:
   from pip._internal import main as pip_main
 else:
   from pip import main as pip_main
