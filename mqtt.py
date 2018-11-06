@@ -3,8 +3,6 @@ import paho.mqtt.client as mqtt
 
 class MqttClient:
 
-  #print({client_id})
-
   def __init__(self, config):
     self._config = config
     self._mqttc = mqtt.Client(client_id=self.client_id, clean_session=False)
