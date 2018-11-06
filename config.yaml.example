@@ -4,6 +4,7 @@ mqtt:
   username: user
   password: password
   topic_prefix: hostname
+  client_id: bt-mqtt-gateway
 
 manager:
   topic_subscription:

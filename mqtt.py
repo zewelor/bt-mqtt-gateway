@@ -1,11 +1,13 @@
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 
-
 class MqttClient:
+
+  #print({client_id})
+
   def __init__(self, config):
     self._config = config
-    self._mqttc = mqtt.Client(client_id='bt-mqtt-gateway', clean_session=False)
+    self._mqttc = mqtt.Client(client_id=self.client_id, clean_session=False)
     
     if self.username is not None and self.password is not None:
       self._auth = {'username': self.username, 'password': self.password}
@@ -24,6 +26,10 @@ class MqttClient:
                      hostname=self.hostname,
                      port=self.port,
                      auth=self._auth)
+
+  @property
+  def client_id(self):
+    return self._config['client_id'] if 'client_id' in self._config else 'bt-mqtt-gateway'
 
   @property
   def hostname(self):
