@@ -71,7 +71,9 @@ class ThermostatWorker(BaseWorker):
     return ret
 
   def on_command(self, topic, value):
-    _, device_name, method, _ = topic.split('/')
+    if self.topic_prefix is not None:
+      _, device_name, method, _ = topic[len(self.topic_prefix+"/"):].split('/')
+
     thermostat = self.devices[device_name]
 
     value = value.decode('utf-8')
