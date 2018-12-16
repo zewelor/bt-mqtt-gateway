@@ -1,29 +1,25 @@
-import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
+
 
 class MqttClient:
 
   def __init__(self, config):
     self._config = config
     self._mqttc = mqtt.Client(client_id=self.client_id, clean_session=False)
-    
-    if self.username is not None and self.password is not None:
-      self._auth = {'username': self.username, 'password': self.password}
-    else:
-      self._auth = None
+
+    if self.username and self.password:
+      self.mqttc.username_pw_set(self.username, self.password)
+
+    self.mqttc.connect(self.hostname, port=self.port)
+    self.mqttc.loop_start()
 
   def publish(self, messages):
-    if messages is None or len(messages) == 0:
+    if not messages:
       return
-    
-    if self.topic_prefix is not None:
-      for m in messages:
-        m.topic = "{}/{}".format(self.topic_prefix, m.topic)
-    
-    publish.multiple(list(map(lambda m: m.as_dict, messages)),
-                     hostname=self.hostname,
-                     port=self.port,
-                     auth=self._auth)
+
+    for m in messages:
+      topic = "{}/{}".format(self.topic_prefix, m.topic) if self.topic_prefix else m.topic
+      self.mqttc.publish(topic, m.payload)
 
   @property
   def client_id(self):
@@ -54,17 +50,10 @@ class MqttClient:
     return self._mqttc
 
   def callbacks_subscription(self, callbacks):
-    if self.username is not None and self.password is not None:
-      self.mqttc.username_pw_set(self.username, self.password)
-    self.mqttc.connect(self.hostname, port=self.port)
-
     for topic, callback in callbacks:
-      if self.topic_prefix is not None:
-        topic = "{}/{}".format(self.topic_prefix, topic)
+      topic = "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
       self.mqttc.message_callback_add(topic, callback)
       self.mqttc.subscribe(topic)
-
-    self.mqttc.loop_start()
 
 
 class MqttMessage:
