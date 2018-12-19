@@ -59,7 +59,7 @@ class MqttClient:
     self.mqttc.connect(self.hostname, port=self.port)
 
     for topic, callback in callbacks:
-      if self.topic_prefix is not None:
+      if self.topic_prefix:
         topic = "{}/{}".format(self.topic_prefix, topic)
       self.mqttc.message_callback_add(topic, callback)
       self.mqttc.subscribe(topic)
