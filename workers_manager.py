@@ -102,6 +102,8 @@ class WorkersManager:
     for package in package_names:
       pip_main(['install', '-q', package])
 
-  def _on_command_wrapper(self, worker_obj, client, _, c):
+  def _on_command_wrapper(self, worker_obj, client, userdata, c):
     _LOGGER.debug("on command wrapper for with %s: %s", c.topic, c.payload)
-    self._queue_command(self.Command(worker_obj.on_command, [c.topic, c.payload]))
+    global_topic_prefix = userdata['global_topic_prefix']
+    topic = c.topic[len(global_topic_prefix+'/'):] if global_topic_prefix is not None else c.topic
+    self._queue_command(self.Command(worker_obj.on_command, [topic, c.payload]))

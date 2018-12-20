@@ -5,7 +5,9 @@ class MqttClient:
 
   def __init__(self, config):
     self._config = config
-    self._mqttc = mqtt.Client(client_id=self.client_id, clean_session=False)
+    self._mqttc = mqtt.Client(client_id=self.client_id,
+                              clean_session=False,
+                              userdata = {'global_topic_prefix': self.topic_prefix})
 
     if self.username and self.password:
       self.mqttc.username_pw_set(self.username, self.password)
