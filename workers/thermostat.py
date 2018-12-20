@@ -9,6 +9,8 @@ REQUIREMENTS = ['python-eq3bt']
 monitoredAttrs = ["low_battery", "valve_state", "target_temperature", "window_open", "locked"]
 
 STATE_AWAY = 'away'
+STATE_ECO  = 'eco'
+STATE_HEAT = 'heat'
 STATE_MANUAL = 'manual'
 STATE_ON = 'on'
 STATE_OFF = 'off'
@@ -21,10 +23,10 @@ class ThermostatWorker(BaseWorker):
       self._mapped_modes = {
         Mode.Closed: STATE_OFF,
         Mode.Open: STATE_ON,
-        Mode.Auto: 'auto',
+        Mode.Auto: STATE_HEAT,
         Mode.Manual: STATE_MANUAL,
-        Mode.Away: STATE_AWAY,
-        Mode.Boost: 'heat',
+        Mode.Away: STATE_ECO,
+        Mode.Boost: 'boost',
       }
 
       self._reverse_modes = {v: k for k, v in self._mapped_modes.items()}
@@ -39,7 +41,7 @@ class ThermostatWorker(BaseWorker):
 
     @staticmethod
     def away_mode_on_off(mode):
-      if mode == STATE_AWAY:
+      if mode == STATE_ECO:
         return STATE_ON
       else:
         return STATE_OFF
@@ -47,9 +49,9 @@ class ThermostatWorker(BaseWorker):
     @staticmethod
     def on_off_to_mode(on_off):
       if on_off == STATE_ON:
-        return STATE_AWAY
+        return STATE_ECO
       else:
-        return 'auto'
+        return STATE_HEAT
 
 
   def _setup(self):
