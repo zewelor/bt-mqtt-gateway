@@ -13,9 +13,6 @@ class MqttClient:
     if self.username and self.password:
       self.mqttc.username_pw_set(self.username, self.password)
 
-    self.mqttc.connect(self.hostname, port=self.port)
-    self.mqttc.loop_start()
-
   def publish(self, messages):
     if not messages:
       return
@@ -53,11 +50,15 @@ class MqttClient:
     return self._mqttc
 
   def callbacks_subscription(self, callbacks):
+    self.mqttc.connect(self.hostname, port=self.port)
+
     for topic, callback in callbacks:
       topic = "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
       _LOGGER.debug("Subscribing to: %s" % topic)
       self.mqttc.message_callback_add(topic, callback)
       self.mqttc.subscribe(topic)
+
+    self.mqttc.loop_start()
 
 
 class MqttMessage:
