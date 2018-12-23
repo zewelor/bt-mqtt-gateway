@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+from logger import _LOGGER
 
 
 class MqttClient:
@@ -54,6 +55,7 @@ class MqttClient:
   def callbacks_subscription(self, callbacks):
     for topic, callback in callbacks:
       topic = "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
+      _LOGGER.debug("Subscribing to: %s" % topic)
       self.mqttc.message_callback_add(topic, callback)
       self.mqttc.subscribe(topic)
 

@@ -61,7 +61,6 @@ class WorkersManager:
         raise "%s cannot be initialized, it has to define run or status_update method" % worker_name
 
       if 'topic_subscription' in worker_config:
-        _LOGGER.debug("Subscribing to: %s" % worker_config['topic_subscription'])
         self._mqtt_callbacks.append((
           worker_config['topic_subscription'],
           partial(self._on_command_wrapper, worker_obj)
@@ -69,7 +68,6 @@ class WorkersManager:
 
     if 'topic_subscription' in config:
       for (callback_name, options) in config['topic_subscription'].items():
-        _LOGGER.debug("Subscribing to: %s with command: %s" % (options['topic'], callback_name))
         self._mqtt_callbacks.append((
           options['topic'],
           lambda client, _ , c: self._queue_if_matching_payload(self.Command(getattr(self, callback_name)), c.payload, options['payload']))
