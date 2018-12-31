@@ -1,6 +1,8 @@
 import paho.mqtt.client as mqtt
 from logger import _LOGGER
 
+LWT_ONLINE = 'online'
+LWT_OFFLINE = 'offline'
 
 class MqttClient:
 
@@ -13,13 +15,17 @@ class MqttClient:
     if self.username and self.password:
       self.mqttc.username_pw_set(self.username, self.password)
 
+    if self.availability_topic:
+      _LOGGER.debug("Setting LWT to: %s" % self.availability_topic)
+      self.mqttc.will_set(self.availability_topic, payload=LWT_OFFLINE, retain=True)
+
   def publish(self, messages):
     if not messages:
       return
 
     for m in messages:
       topic = "{}/{}".format(self.topic_prefix, m.topic) if self.topic_prefix else m.topic
-      self.mqttc.publish(topic, m.payload)
+      self.mqttc.publish(topic, m.payload, retain=m.retain)
 
   @property
   def client_id(self):
@@ -46,6 +52,10 @@ class MqttClient:
     return self._config['topic_prefix'] if 'topic_prefix' in self._config else None
 
   @property
+  def availability_topic(self):
+    return self._config['availability_topic'] if 'availability_topic' in self._config else None
+
+  @property
   def mqttc(self):
     return self._mqttc
 
@@ -60,11 +70,18 @@ class MqttClient:
 
     self.mqttc.loop_start()
 
+    if self.availability_topic:
+      self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_ONLINE, retain=True)])
+
+  def __del__(self):
+    if self.availability_topic:
+      self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_OFFLINE, retain=True)])
 
 class MqttMessage:
-  def __init__(self, topic=None, payload=None):
+  def __init__(self, topic=None, payload=None, retain=False):
     self._topic = topic
     self._payload = payload
+    self._retain = retain
 
   @property
   def topic(self):
@@ -77,6 +94,10 @@ class MqttMessage:
   @property
   def payload(self):
     return self._payload
+
+  @property
+  def retain(self):
+    return self._retain
 
   @property
   def as_dict(self):
