@@ -5,6 +5,7 @@ mqtt:
   password: password
   topic_prefix: hostname
   client_id: bt-mqtt-gateway
+  availability_topic: lwt_topic
 
 manager:
   topic_subscription:
