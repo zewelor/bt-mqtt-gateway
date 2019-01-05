@@ -16,15 +16,16 @@ class MqttClient:
       self.mqttc.username_pw_set(self.username, self.password)
 
     if self.availability_topic:
-      _LOGGER.debug("Setting LWT to: %s" % self.availability_topic)
-      self.mqttc.will_set(self.availability_topic, payload=LWT_OFFLINE, retain=True)
+      topic = self._format_topic(self.availability_topic)
+      _LOGGER.debug("Setting LWT to: %s" % topic)
+      self.mqttc.will_set(topic, payload=LWT_OFFLINE, retain=True)
 
   def publish(self, messages):
     if not messages:
       return
 
     for m in messages:
-      topic = "{}/{}".format(self.topic_prefix, m.topic) if self.topic_prefix else m.topic
+      topic = self._format_topic(m.topic)
       self.mqttc.publish(topic, m.payload, retain=m.retain)
 
   @property
@@ -63,7 +64,7 @@ class MqttClient:
     self.mqttc.connect(self.hostname, port=self.port)
 
     for topic, callback in callbacks:
-      topic = "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
+      topic = self._format_topic(topic)
       _LOGGER.debug("Subscribing to: %s" % topic)
       self.mqttc.message_callback_add(topic, callback)
       self.mqttc.subscribe(topic)
@@ -76,6 +77,9 @@ class MqttClient:
   def __del__(self):
     if self.availability_topic:
       self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_OFFLINE, retain=True)])
+
+  def _format_topic(self, topic):
+    return "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
 
 class MqttMessage:
   def __init__(self, topic=None, payload=None, retain=False):
