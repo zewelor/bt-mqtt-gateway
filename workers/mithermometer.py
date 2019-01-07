@@ -26,12 +26,9 @@ class MithermometerWorker(BaseWorker):
     return ret
 
   @timeout(8.0)
-
   def update_device_state(self, name, poller):
-
     ret = []
+    poller.clear_cache()
     for attr in monitoredAttrs:
-
-      ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=poller.parameter_value(attr, read_cached=False)))
-
+      ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=poller.parameter_value(attr)))
     return ret
