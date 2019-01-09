@@ -48,3 +48,10 @@ manager:
           living_room: 00:11:22:33:44:55
         topic_prefix: mithermometer
       update_interval: 300
+    blescanmulti:
+      args:
+        devices:
+          beacon: 00:11:22:33:44:55
+          smartwath: 00:11:22:33:44:55
+        topic_prefix: blescan
+      update_interval: 60
