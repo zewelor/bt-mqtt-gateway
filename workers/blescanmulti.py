@@ -9,43 +9,43 @@ from logger import _LOGGER
 REQUIREMENTS = ['bluepy']
 
 class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
+  def __init__(self):
+    DefaultDelegate.__init__(self)
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            _LOGGER.debug("Discovered new device: %s" % dev.addr)
+  def handleDiscovery(self, dev, isNewDev, isNewData):
+    if isNewDev:
+      _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
 class BlescanmultiWorker(BaseWorker):
-    def searchmac(self, devices, mac):
-        present = False
-        for dev in devices:
-            if dev.addr == mac:
-               present = True
+  def searchmac(self, devices, mac):
+    present = False
+    for dev in devices:
+      if dev.addr == mac:
+         present = True
 
-        return present
+    return present
 
-    def getrssi(self, devices, mac):
-        rssivalue = -999
-        for dev in devices:
-            if dev.addr == mac:
-               rssivalue = dev.rssi
+  def getrssi(self, devices, mac):
+    rssivalue = -999
+    for dev in devices:
+      if dev.addr == mac:
+         rssivalue = dev.rssi
 
-        return rssivalue
+    return rssivalue
 
-    def status_update(self):
-        scanner = Scanner().withDelegate(ScanDelegate())
-        devices = scanner.scan(10.0)
-        ret = []
+  def status_update(self):
+    scanner = Scanner().withDelegate(ScanDelegate())
+    devices = scanner.scan(10.0)
+    ret = []
 
-        for name, mac in self.devices.items():
-          try:
-            if self.searchmac(devices, mac):
-              ret.append(MqttMessage(topic=self.format_topic('presence/rssi/'+mac), payload=str(self.getrssi(devices,mac))))
-              ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="1"))
-            else:
-              ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="0"))
-          except RuntimeError:
-              pass
+    for name, mac in self.devices.items():
+      try:
+      if self.searchmac(devices, mac):
+        ret.append(MqttMessage(topic=self.format_topic('presence/rssi/'+mac), payload=str(self.getrssi(devices,mac))))
+        ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="1"))
+      else:
+        ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="0"))
+      except RuntimeError:
+        pass
 
-        return ret
+    return ret
