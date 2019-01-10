@@ -20,7 +20,7 @@ class BlescanmultiWorker(BaseWorker):
   def searchmac(self, devices, mac):
     present = False
     for dev in devices:
-      if dev.addr == mac:
+      if dev.addr == mac.lower():
          present = True
 
     return present
@@ -28,7 +28,7 @@ class BlescanmultiWorker(BaseWorker):
   def getrssi(self, devices, mac):
     rssivalue = -999
     for dev in devices:
-      if dev.addr == mac:
+      if dev.addr == mac.lower():
          rssivalue = dev.rssi
 
     return rssivalue
@@ -40,11 +40,11 @@ class BlescanmultiWorker(BaseWorker):
 
     for name, mac in self.devices.items():
       try:
-      if self.searchmac(devices, mac):
-        ret.append(MqttMessage(topic=self.format_topic('presence/rssi/'+mac), payload=str(self.getrssi(devices,mac))))
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="1"))
-      else:
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+mac), payload="0"))
+        if self.searchmac(devices, mac):
+          ret.append(MqttMessage(topic=self.format_topic('presence/'+name+'/rssi'), payload=str(self.getrssi(devices,mac))))
+          ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload="1"))
+        else:
+          ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload="0"))
       except RuntimeError:
         pass
 
