@@ -106,6 +106,7 @@ You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service
 * [**zewelor**](https://github.com/zewelor) - *Initial work*
 * [**bbbenji**](https://github.com/bbbenji) - *Minor contributions*
 * [**elviosebastianelli**](https://github.com/elviosebastianelli) - *BLEscanmulti*
+* [**jumping2000**](https://github.com/jumping2000) - *BLEscan*
 
 ## License
 
