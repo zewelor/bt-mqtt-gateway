@@ -1,3 +1,4 @@
 config.yaml
 __pycache__/
 .idea/
+.vscode/

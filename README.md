@@ -21,6 +21,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * [MySensors](https://www.mysensors.org/)
 * [Xiaomi Mi Flora plant sensor](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) via [miflora](https://github.com/open-homeautomation/miflora)
 * Xiaomi Aqara thermometer via [mithermometer](https://github.com/hobbypunk90/mithermometer)
+* Bluetooth Low Power devices (BLE)
 
 ## Getting Started
 
@@ -104,6 +105,8 @@ You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service
 
 * [**zewelor**](https://github.com/zewelor) - *Initial work*
 * [**bbbenji**](https://github.com/bbbenji) - *Minor contributions*
+* [**elviosebastianelli**](https://github.com/elviosebastianelli) - *BLEscanmulti*
+* [**jumping2000**](https://github.com/jumping2000) - *BLEscan*
 
 ## License
 
