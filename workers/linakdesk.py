@@ -3,7 +3,7 @@ from interruptingcow import timeout
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
-REQUIREMENTS = ['git+https://github.com/zewelor/linak_bt_desk.git@aa9412f98b3044be34c70e89d02721e6813ea731#linak_bt_desk']
+REQUIREMENTS = ['git+https://github.com/zewelor/linak_bt_desk.git@aa9412f98b3044be34c70e89d02721e6813ea731#egg=linak_bt_desk']
 
 class LinakdeskWorker(BaseWorker):
   def _setup(self):
