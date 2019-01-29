@@ -15,7 +15,9 @@ from mqtt import MqttClient
 from workers_manager import WorkersManager
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--debug', action='store_true', default=False)
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-d', '--debug', action='store_true', default=False)
+group.add_argument('-q', '--quiet', action='store_true', default=False)
 parsed = parser.parse_args()
 
 if parsed.debug:
@@ -38,7 +40,8 @@ try:
       except (KeyboardInterrupt, SystemExit):
         raise
       except Exception as e:
-        _LOGGER.exception(e)
+        if not parsed.quiet:
+          _LOGGER.exception(e)
 except KeyboardInterrupt:
   running = False
   _LOGGER.info('Exiting allowing jobs to finish. If you need force exit use kill')
