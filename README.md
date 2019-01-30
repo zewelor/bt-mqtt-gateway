@@ -47,6 +47,7 @@ sudo pip3 install -r requirements.txt
 ## Configuration
 
 All worker configuration is done in the file [`config.yaml`](config.yaml.example).
+Be sure to change all options for your needs.
 This file needs to be created first:
 
 ```shell
@@ -92,6 +93,12 @@ sudo systemctl enable bt-mqtt-gateway
 
 **Attention:**
 You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service`.
+
+**Testing mqtt:**
+Use mosquitto_sub to print all messages
+```
+mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
+```
 
 ## Custom worker development
 
