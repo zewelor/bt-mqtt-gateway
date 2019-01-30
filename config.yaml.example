@@ -3,7 +3,7 @@ mqtt:
   port: 1883
   username: user
   password: password
-  topic_prefix: hostname
+  topic_prefix: hostname         # All messages will have that prefix added, remove if you dont need this.
   client_id: bt-mqtt-gateway
   availability_topic: lwt_topic
 
