@@ -54,6 +54,16 @@ class WorkersManager:
             partial(self._queue_command, command), 'interval',
             seconds=worker_config['update_interval'],
           )
+        
+        _LOGGER.debug("Adding on-demand polling for %s" % (worker_name))
+        poll_topics = []
+        poll_topics.append(worker_obj.format_topic('+', 'poll'))
+        poll_topics.append(worker_obj.format_topic('poll'))
+        for topic in poll_topics:
+          self._mqtt_callbacks.append((
+            topic,
+            partial(self._poll_wrapper, worker_obj)
+          ))
       elif hasattr(worker_obj, 'run'):
         _LOGGER.debug("Registered: %s as daemon" % (worker_name))
         self._daemons.append(worker_obj)
@@ -99,6 +109,33 @@ class WorkersManager:
   def _pip_install_helper(package_names):
     for package in package_names:
       pip_main(['install', '-q', package])
+
+  def _poll_wrapper(self, worker_obj, client, userdata, c):
+    if c.payload.decode('utf-8') != 'ON':
+      return
+    poll_device_supported = 'poll_device' in worker_obj.status_update.__code__.co_varnames
+    topic_prefixes = []
+    topic_prefixes.append(userdata.get('global_topic_prefix', ''))
+    topic_prefixes.append(getattr(worker_obj, 'topic_prefix', ''))
+    topic_prefixes.append('poll')
+    device_name = str(c.topic)
+    for suffix in topic_prefixes:
+      if suffix:
+        device_name = str(device_name).replace(suffix, '').replace('/', '')
+    device_name = device_name if device_name else None
+    if not poll_device_supported and device_name:
+      _LOGGER.debug("This worker does not support polling specific devices."
+                    " Ignoring: %s", c.topic)
+      return
+    elif not poll_device_supported:
+      poll_args = []
+    elif device_name not in getattr(worker_obj, 'devices', []):
+      _LOGGER.debug("Device not found. Ignoring: %s", c.topic)
+      return
+    else:
+      poll_args = [device_name]
+    _LOGGER.debug("Poll initiated for %s", c.topic)
+    self._queue_command(self.Command(worker_obj.status_update, poll_args))
 
   def _on_command_wrapper(self, worker_obj, client, userdata, c):
     _LOGGER.debug("on command wrapper for with %s: %s", c.topic, c.payload)
