@@ -23,12 +23,14 @@ class BlescanmultiWorker(BaseWorker):
 
     return None
 
-  def status_update(self):
+  def status_update(self, poll_device=None):
     scanner = Scanner().withDelegate(ScanDelegate())
     devices = scanner.scan(10.0)
     ret = []
 
     for name, mac in self.devices.items():
+      if poll_device and name != poll_device:
+        continue
       device = self.searchmac(devices, mac)
       if device is None:
         ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload="0"))

@@ -8,6 +8,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * Highly extensible via custom workers
 * Data publication via MQTT
 * Configurable topic and payload
+* Support for on-demand device polling
 * MQTT authentication support
 * Systemd service
 * Reliable and intuitive
@@ -98,6 +99,18 @@ You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service
 Use mosquitto_sub to print all messages
 ```
 mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
+```
+
+**On-Demand Polling**
+To poll a device on demand (in addition to it's `update_interval`), publish an empty message at the `/poll` topic of the device.
+I.E:
+```
+# Will poll the scale
+mosquitto_pub -h localhost -t 'miscale/poll' -m ''
+# Will poll all MiFlora devices
+mosquitto_pub -h localhost -t 'miflora/poll' -m ''
+# Will poll the specified MiFlora device
+mosquitto_pub -h localhost -t 'miflora/herbs/poll' -m ''
 ```
 
 ## Custom worker development

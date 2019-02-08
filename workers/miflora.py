@@ -15,9 +15,11 @@ class MifloraWorker(BaseWorker):
     for name, mac in self.devices.items():
       self.devices[name] = MiFloraPoller(mac, BluepyBackend, cache_timeout=0)
 
-  def status_update(self):
+  def status_update(self, poll_device=None):
     ret = []
     for name, poller in self.devices.items():
+      if poll_device and name != poll_device:
+        continue
       try:
         ret += self.update_device_state(name, poller)
       except RuntimeError:
@@ -26,7 +28,6 @@ class MifloraWorker(BaseWorker):
     return ret
 
   @timeout(8.0)
-
   def update_device_state(self, name, poller):
 
     ret = []
