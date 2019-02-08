@@ -100,6 +100,16 @@ Use mosquitto_sub to print all messages
 mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
 ```
 
+**Dynamically Changing the Update Interval**
+To dynamically change the `update_interval` of a worker, publish a message containing the new interval in seconds at the `update_interval` topic. Note that the `update_interval` will revert back to the value in `config.yaml` when the gateway is restarted.
+I.E:
+```
+# Set a new update interval of 3 minutes
+mosquitto_pub -h localhost -t 'miflora/update_interval' -m '150'
+# Set a new update interval of 30 seconds
+mosquitto_pub -h localhost -t 'mithermometer/update_interval' -m '30'
+```
+
 ## Custom worker development
 
 
