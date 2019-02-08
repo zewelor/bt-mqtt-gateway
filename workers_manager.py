@@ -111,7 +111,7 @@ class WorkersManager:
       pip_main(['install', '-q', package])
 
   def _poll_wrapper(self, worker_obj, client, userdata, c):
-    if c.payload.decode('utf-8') != 'ON':
+    if c.payload.decode('utf-8') != '':
       return
     poll_device_supported = 'poll_device' in worker_obj.status_update.__code__.co_varnames
     topic_prefixes = []
