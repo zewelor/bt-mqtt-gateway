@@ -62,11 +62,13 @@ class ThermostatWorker(BaseWorker):
 
     self._modes_mapper = self.ModesMapper()
 
-  def status_update(self):
+  def status_update(self, poll_device=None):
     from bluepy import btle
 
     ret = []
     for name, thermostat in self.devices.items():
+      if poll_device and name != poll_device:
+        continue
       try:
         ret += self.update_device_state(name, thermostat)
       except (RuntimeError, btle.BTLEException):

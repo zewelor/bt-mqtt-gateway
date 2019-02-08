@@ -15,9 +15,11 @@ class MithermometerWorker(BaseWorker):
     for name, mac in self.devices.items():
       self.devices[name] = MiThermometerPoller(mac, BluepyBackend)
 
-  def status_update(self):
+  def status_update(self, poll_device=None):
     ret = []
     for name, poller in self.devices.items():
+      if poll_device and name != poll_device:
+        continue
       try:
         ret += self.update_device_state(name, poller)
       except RuntimeError:
