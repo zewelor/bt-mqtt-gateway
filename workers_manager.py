@@ -50,10 +50,15 @@ class WorkersManager:
         self._update_commands.append(command)
 
         if 'update_interval' in worker_config:
-          self._scheduler.add_job(
+          job_id = '{}_interval_job'.format(worker_name)
+          interval_job = self._scheduler.add_job(
             partial(self._queue_command, command), 'interval',
-            seconds=worker_config['update_interval'],
+            seconds=worker_config['update_interval'], id=job_id
           )
+          self._mqtt_callbacks.append((
+            worker_obj.format_topic('update_interval'),
+            partial(self._update_interval_wrapper, command, job_id)
+          ))
       elif hasattr(worker_obj, 'run'):
         _LOGGER.debug("Registered: %s as daemon" % (worker_name))
         self._daemons.append(worker_obj)
@@ -99,6 +104,18 @@ class WorkersManager:
   def _pip_install_helper(package_names):
     for package in package_names:
       pip_main(['install', '-q', package])
+
+  def _update_interval_wrapper(self, command, job_id, client, userdata, c):
+    _LOGGER.debug("Recieved updated interval for %s with: %s", c.topic, c.payload)
+    try:
+      new_interval = int(c.payload)
+      self._scheduler.remove_job(job_id)
+      self._scheduler.add_job(
+              partial(self._queue_command, command), 'interval',
+              seconds=new_interval, id=job_id
+            )
+    except ValueError:
+      _LOGGER.info("New interval invalid, recieved: %s", c.payload)
 
   def _on_command_wrapper(self, worker_obj, client, userdata, c):
     _LOGGER.debug("on command wrapper for with %s: %s", c.topic, c.payload)
