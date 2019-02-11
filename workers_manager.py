@@ -12,6 +12,7 @@ from interruptingcow import timeout
 from functools import partial
 from logger import _LOGGER
 from workers_queue import _WORKERS_QUEUE
+from pytz import utc
 
 class WorkersManager:
   class Command:
@@ -31,7 +32,7 @@ class WorkersManager:
   def __init__(self):
     self._mqtt_callbacks = []
     self._update_commands = []
-    self._scheduler = BackgroundScheduler()
+    self._scheduler = BackgroundScheduler(timezone=utc)
     self._daemons = []
 
   def register_workers(self, config):
