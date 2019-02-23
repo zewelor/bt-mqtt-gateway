@@ -1,8 +1,9 @@
 import paho.mqtt.client as mqtt
-from logger import _LOGGER
+import logger
 
 LWT_ONLINE = 'online'
 LWT_OFFLINE = 'offline'
+_LOGGER = logger.get(__name__)
 
 class MqttClient:
 

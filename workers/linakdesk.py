@@ -15,7 +15,7 @@ class LinakdeskWorker(BaseWorker):
     return [MqttMessage(topic=self.format_topic('height/cm'), payload=self._get_height())]
 
   def _get_height(self):
-    with timeout(20):
+    with timeout(20, exception=TimeoutError):
       self.desk.read_dpg_data()
       return self.desk.current_height_with_offset.cm
 

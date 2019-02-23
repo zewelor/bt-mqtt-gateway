@@ -1,9 +1,11 @@
-from mqtt import MqttMessage
-from workers.base import BaseWorker
-from logger import _LOGGER
 import serial
+from mqtt import MqttMessage
+
+from workers.base import BaseWorker
+import logger
 
 REQUIREMENTS = ['pyserial']
+_LOGGER = logger.get(__name__)
 
 
 class MysensorsWorker(BaseWorker):

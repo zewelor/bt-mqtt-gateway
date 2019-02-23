@@ -1,11 +1,14 @@
 import time
-from interruptingcow import timeout
+
 from bluepy.btle import Scanner, DefaultDelegate
 from mqtt import MqttMessage
+
 from workers.base import BaseWorker
-from logger import _LOGGER
+import logger
 
 REQUIREMENTS = ['bluepy']
+_LOGGER = logger.get(__name__)
+
 
 class ScanDelegate(DefaultDelegate):
   def __init__(self):

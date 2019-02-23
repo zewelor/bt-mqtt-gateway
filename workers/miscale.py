@@ -21,7 +21,7 @@ class MiscaleWorker(BaseWorker):
     scanner = btle.Scanner().withDelegate(scan_processor)
     scanner.scan(5, passive=True)
 
-    with timeout(5):
+    with timeout(5, exception=TimeoutError):
       while scan_processor.weight is None:
         time.sleep(1)
       return scan_processor.weight
