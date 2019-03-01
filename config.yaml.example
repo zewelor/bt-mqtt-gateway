@@ -55,3 +55,10 @@ manager:
           smartwath: 00:11:22:33:44:55
         topic_prefix: blescan
       update_interval: 60
+    toothbrush:
+      args:
+        devices:
+          ix: 00:11:22:33:44:55
+          ia: 11:22:33:44:55:66
+        topic_prefix: toothbrush
+      update_interval: 10 
