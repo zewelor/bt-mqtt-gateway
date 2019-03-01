@@ -28,6 +28,12 @@ class BlescanmultiWorker(BaseWorker):
   scan_timeout = 10.  # type: float
   scan_passive = True  # type: bool
 
+  def __init__(self, **kwargs):
+    super(BlescanmultiWorker, self).__init__(**kwargs)
+    self.last_status = {
+      device: (False, time.time()) for device in self.devices.keys()
+    }
+
   def searchmac(self, devices, mac):
     for dev in devices:
       if dev.addr == mac.lower():
