@@ -22,7 +22,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * [Xiaomi Mi Flora plant sensor](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) via [miflora](https://github.com/open-homeautomation/miflora)
 * Xiaomi Aqara thermometer via [mithermometer](https://github.com/hobbypunk90/mithermometer)
 * Bluetooth Low Power devices (BLE)
-* Oral-B connected toothbrushes
+* [Oral-B connected toothbrushes](https://oralb.com/en-us/products#viewtype:gridview/facets:feature=feature-bluetooth-connectivity/category:products/page:0/sortby:Featured-Sort/productsdisplayed:undefined/promotilesenabled:undefined/cwidth:3/pscroll:)
 
 ## Getting Started
 
