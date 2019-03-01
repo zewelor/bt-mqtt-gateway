@@ -43,9 +43,9 @@ class BlescanmultiWorker(BaseWorker):
     for name, mac in self.devices.items():
       device = self.searchmac(devices, mac)
       if device is None:
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload="0"))
+        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload=self.available_payload))
       else:
         ret.append(MqttMessage(topic=self.format_topic('presence/'+name+'/rssi'), payload=device.rssi))
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload="1"))
+        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload=self.unavailable_payload))
 
     return ret
