@@ -15,7 +15,17 @@ class ScanDelegate(DefaultDelegate):
     if isNewDev:
       _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
+
 class BlescanmultiWorker(BaseWorker):
+  # Default values
+  devices = {}
+  available_payload = 'home'  # type: str
+  unavailable_payload = 'not_home'  # type: str
+  available_timeout = 0  # type: float
+  unavailable_timeout = 60  # type: float
+  scan_timeout = 10.  # type: float
+  scan_passive = True  # type: bool
+
   def searchmac(self, devices, mac):
     for dev in devices:
       if dev.addr == mac.lower():
