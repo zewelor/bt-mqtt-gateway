@@ -78,7 +78,7 @@ class BlescanmultiWorker(BaseWorker):
     super(BlescanmultiWorker, self).__init__(**kwargs)
     self.scanner = Scanner().withDelegate(ScanDelegate())
     self.last_status = [
-      BleDeviceStatus(self, name, mac) for name, mac in self.devices.values()
+      BleDeviceStatus(self, name, mac) for name, mac in self.devices.items()
     ]
 
   def searchmac(self, devices, mac):
