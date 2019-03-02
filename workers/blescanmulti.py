@@ -63,12 +63,16 @@ class BleDeviceStatus:
 class BlescanmultiWorker(BaseWorker):
   # Default values
   devices = {}
+  # Payload that should be send when device is available
   available_payload = 'home'  # type: str
+  # Payload that should be send when device is unavailable
   unavailable_payload = 'not_home'  # type: str
+  # After what time (in seconds) we should inform that device is available (default: 0 seconds)
   available_timeout = 0  # type: float
+  # After what time (in seconds) we should inform that device is unavailable (default: 60 seconds)
   unavailable_timeout = 60  # type: float
   scan_timeout = 10.  # type: float
-  scan_passive = True  # type: bool
+  scan_passive = "true"  # type: str
 
   def __init__(self, **kwargs):
     super(BlescanmultiWorker, self).__init__(**kwargs)
