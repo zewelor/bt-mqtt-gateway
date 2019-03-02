@@ -91,14 +91,14 @@ class BlescanmultiWorker(BaseWorker):
 
   def status_update(self):
     devices = self.scanner.scan(float(self.scan_timeout), passive=booleanize(self.scan_passive))
+    mac_addresses = {
+      device.addr: device for device in devices
+    }
     ret = []
 
-    for name, mac in self.devices.items():
-      device = self.searchmac(devices, mac)
-      if device is None:
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload=self.available_payload))
-      else:
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+name+'/rssi'), payload=device.rssi))
-        ret.append(MqttMessage(topic=self.format_topic('presence/'+name), payload=self.unavailable_payload))
+    for status in self.last_status:
+      device = mac_addresses.get(status.mac, None)
+      if status.set_status(device is not None):
+        ret.append(status.generate_message(device))
 
     return ret
