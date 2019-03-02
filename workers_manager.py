@@ -121,7 +121,7 @@ class WorkersManager:
           partial(self._queue_command, command), 'interval',
           seconds=new_interval, id=job_id)
     except ValueError:
-      _LOGGER.warning("Ignoring invalid new interval: %s", c.payload)
+      logger.log_exception(_LOGGER, 'Ignoring invalid new interval: %s', c.payload)
 
   def _on_command_wrapper(self, worker_obj, client, userdata, c):
     _LOGGER.debug("Received command for %s on %s: %s", repr(worker_obj), c.topic, c.payload)

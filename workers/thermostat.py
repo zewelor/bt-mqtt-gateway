@@ -77,7 +77,7 @@ class ThermostatWorker(BaseWorker):
       try:
         ret += self.update_device_state(name, thermostat)
       except btle.BTLEException as e:
-        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, thermostat._conn._mac, type(e).__name__)
+        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, thermostat._conn._mac, type(e).__name__, suppress=True)
     return ret
 
   def on_command(self, topic, value):
@@ -108,7 +108,7 @@ class ThermostatWorker(BaseWorker):
     try:
       return self.update_device_state(device_name, thermostat)
     except btle.BTLEException as e:
-      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, thermostat._conn._mac, type(e).__name__)
+      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, thermostat._conn._mac, type(e).__name__, suppress=True)
       return []
 
   def update_device_state(self, name, thermostat):

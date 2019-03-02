@@ -21,8 +21,9 @@ from workers_manager import WorkersManager
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
-group.add_argument('-d', '--debug', action='store_true', default=False)
-group.add_argument('-q', '--quiet', action='store_true', default=False)
+group.add_argument('-d', '--debug', action='store_true', default=False, help='Set logging to output debug information')
+group.add_argument('-q', '--quiet', action='store_true', default=False, help='Set logging to just output warnings and errors')
+parser.add_argument('-s', '--suppress-update-failures', dest='suppress', action='store_true', default=False, help='Suppress any errors regarding failed device updates')
 parsed = parser.parse_args()
 
 _LOGGER = logger.get()
@@ -33,8 +34,9 @@ elif parsed.debug:
   logger.enable_debug_formatter()
 else:
   _LOGGER.setLevel(logging.INFO)
+logger.suppress_update_failures(parsed.suppress)
 
-_LOGGER.debug('Starting')
+_LOGGER.info('Starting')
 
 mqtt = MqttClient(settings['mqtt'])
 manager = WorkersManager()
@@ -48,7 +50,7 @@ while running:
   except queue.Empty: # Allow for SIGINT processing
     pass
   except TimeoutError:
-    logger.log_exception(_LOGGER, "Timeout while executing worker command")
+    logger.log_exception(_LOGGER, "Timeout while executing worker command", suppress=True)
   except (KeyboardInterrupt, SystemExit):
     running = False
     _LOGGER.info('Finish current jobs and shut down. If you need force exit use kill')

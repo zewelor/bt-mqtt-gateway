@@ -3,6 +3,7 @@ import logging.config
 import yaml
 
 APP_ROOT = 'bt-mqtt-gw'
+SUPPRESSION_ENABLED = False
 
 
 def setup():
@@ -36,8 +37,14 @@ def reset():
     enable_debug_formatter()
 
 
+def suppress_update_failures(suppress):
+  global SUPPRESSION_ENABLED
+  SUPPRESSION_ENABLED = suppress
+
+
 def log_exception(logger, message, *args, **kwargs):
-  if logger.isEnabledFor(logging.DEBUG):
-    logger.exception(message, *args, **kwargs)
-  elif logger.isEnabledFor(logging.WARNING):
-    logger.warning(message, *args, **kwargs)
+  if not ('suppress' in kwargs and kwargs.pop('suppress') and SUPPRESSION_ENABLED):
+    if logger.isEnabledFor(logging.DEBUG):
+      logger.exception(message, *args, **kwargs)
+    elif logger.isEnabledFor(logging.WARNING):
+      logger.warning(message, *args, **kwargs)
