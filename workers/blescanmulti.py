@@ -36,8 +36,6 @@ class BleDeviceStatus:
       self.available = available
       self.last_status_time = time.time()
       self.message_sent = False
-      return True
-    return False
 
   def _timeout(self):
     if self.available:
@@ -55,10 +53,18 @@ class BleDeviceStatus:
     else:
       return self.worker.unavailable_payload
 
-  def generate_message(self, device):
+  def generate_messages(self, device):
+    messages = []
     if not self.message_sent and self.has_time_elapsed():
       self.message_sent = True
-      return MqttMessage(topic=self.worker.format_topic('presence/{}'.format(self.name)), payload=self.payload())
+      messages.append(
+        MqttMessage(topic=self.worker.format_topic('presence/{}'.format(self.name)), payload=self.payload())
+      )
+      if self.available:
+        messages.append(
+          MqttMessage(topic=self.worker.format_topic('presence/{}/rssi'.format(self.name)), payload=device.rssi)
+        )
+    return messages
 
 
 class BlescanmultiWorker(BaseWorker):
@@ -91,7 +97,7 @@ class BlescanmultiWorker(BaseWorker):
 
     for status in self.last_status:
       device = mac_addresses.get(status.mac, None)
-      if status.set_status(device is not None):
-        ret.append(status.generate_message(device))
+      status.set_status(device is not None)
+      ret += status.generate_messages(device)
 
     return ret
