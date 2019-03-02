@@ -58,7 +58,7 @@ class BleDeviceStatus:
   def generate_message(self, device):
     if not self.message_sent and self.has_time_elapsed():
       self.message_sent = True
-      return MqttMessage(topic=device.format_topic('presence/{}'.format(self.name)), payload=self.payload())
+      return MqttMessage(topic=self.worker.format_topic('presence/{}'.format(self.name)), payload=self.payload())
 
 
 class BlescanmultiWorker(BaseWorker):
