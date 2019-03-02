@@ -19,12 +19,13 @@ class ScanDelegate(DefaultDelegate):
 
 
 class BleDeviceStatus:
-  def __init__(self, worker, mac, name, available=False, last_status_time=None, message_sent=True):
+  def __init__(self, worker, mac: str, name: str, available: bool = False, last_status_time: float = None,
+               message_sent: bool = True):
     if last_status_time is None:
       last_status_time = time.time()
 
     self.worker = worker  # type: BlescanmultiWorker
-    self.mac = mac
+    self.mac = mac.lower()
     self.name = name
     self.available = available
     self.last_status_time = last_status_time
