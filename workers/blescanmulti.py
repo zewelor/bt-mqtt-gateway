@@ -18,6 +18,48 @@ class ScanDelegate(DefaultDelegate):
       _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
 
+class BleDeviceStatus:
+  def __init__(self, worker, mac, name, available=False, last_status_time=None, message_sent=True):
+    if last_status_time is None:
+      last_status_time = time.time()
+
+    self.worker = worker  # type: BlescanmultiWorker
+    self.mac = mac
+    self.name = name
+    self.available = available
+    self.last_status_time = last_status_time
+    self.message_sent = message_sent
+
+  def set_status(self, available):
+    if available != self.available:
+      self.available = available
+      self.last_status_time = time.time()
+      self.message_sent = False
+      return True
+    return False
+
+  def _timeout(self):
+    if self.available:
+      return self.worker.available_timeout
+    else:
+      return self.worker.unavailable_timeout
+
+  def has_time_elapsed(self):
+    elapsed = time.time() - self.last_status_time
+    return elapsed > self._timeout()
+
+  def payload(self):
+    if self.available:
+      return self.worker.available_payload
+    else:
+      return self.worker.unavailable_payload
+
+  def generate_message(self, device):
+    if not self.message_sent and self.has_time_elapsed():
+      self.message_sent = True
+      return MqttMessage(topic=device.format_topic('presence/{}'.format(self.name)), payload=self.payload())
+
+
 class BlescanmultiWorker(BaseWorker):
   # Default values
   devices = {}
