@@ -82,13 +82,6 @@ class BlescanmultiWorker(BaseWorker):
       BleDeviceStatus(self, name, mac) for name, mac in self.devices.items()
     ]
 
-  def searchmac(self, devices, mac):
-    for dev in devices:
-      if dev.addr == mac.lower():
-         return dev
-
-    return None
-
   def status_update(self):
     devices = self.scanner.scan(float(self.scan_timeout), passive=booleanize(self.scan_passive))
     mac_addresses = {
