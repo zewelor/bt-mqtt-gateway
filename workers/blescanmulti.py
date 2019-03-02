@@ -73,7 +73,7 @@ class BlescanmultiWorker(BaseWorker):
   # After what time (in seconds) we should inform that device is unavailable (default: 60 seconds)
   unavailable_timeout = 60  # type: float
   scan_timeout = 10.  # type: float
-  scan_passive = "true"  # type: str
+  scan_passive = True  # type: str or bool
 
   def __init__(self, **kwargs):
     super(BlescanmultiWorker, self).__init__(**kwargs)
