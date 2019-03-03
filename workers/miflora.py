@@ -5,7 +5,7 @@ from mqtt import MqttMessage
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ['git+https://github.com/open-homeautomation/miflora.git@84f39432082796412d05b754c948499a1ad710e7#egg=miflora', 'bluepy']
+REQUIREMENTS = ['miflora', 'bluepy']
 monitoredAttrs = ["temperature", "moisture", "light", "conductivity", "battery"]
 _LOGGER = logger.get(__name__)
 
