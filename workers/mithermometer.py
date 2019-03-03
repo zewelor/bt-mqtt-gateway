@@ -5,7 +5,7 @@ from mqtt import MqttMessage
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ['mithermometer==0.1.2']
+REQUIREMENTS = ['git+https://github.com/cybe/mithermometer.git@cd8dba297927da823fbfa8f50bd97393ea6a93c1#egg=mithermometer']
 monitoredAttrs = ["temperature", "humidity", "battery"]
 _LOGGER = logger.get(__name__)
 
