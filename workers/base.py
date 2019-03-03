@@ -9,3 +9,6 @@ class BaseWorker:
 
   def format_topic(self, *args):
     return '/'.join([self.topic_prefix, *args])
+
+  def __repr__(self):
+    return self.__module__.split(".")[-1]

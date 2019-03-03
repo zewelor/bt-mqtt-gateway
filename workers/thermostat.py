@@ -1,12 +1,14 @@
 from builtins import staticmethod
+import logging
 
-from interruptingcow import timeout
 from mqtt import MqttMessage
+
 from workers.base import BaseWorker
+import logger
 
 REQUIREMENTS = ['python-eq3bt']
-
 monitoredAttrs = ["low_battery", "valve_state", "target_temperature", "window_open", "locked"]
+_LOGGER = logger.get(__name__)
 
 STATE_AWAY = 'away'
 STATE_ECO  = 'eco'
@@ -14,6 +16,7 @@ STATE_HEAT = 'heat'
 STATE_MANUAL = 'manual'
 STATE_ON = 'on'
 STATE_OFF = 'off'
+
 
 class ThermostatWorker(BaseWorker):
   class ModesMapper():
@@ -57,7 +60,9 @@ class ThermostatWorker(BaseWorker):
   def _setup(self):
     from eq3bt import Thermostat
 
+    _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
     for name, mac in self.devices.items():
+      _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
       self.devices[name] = Thermostat(mac)
 
     self._modes_mapper = self.ModesMapper()
@@ -66,15 +71,17 @@ class ThermostatWorker(BaseWorker):
     from bluepy import btle
 
     ret = []
+    _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
     for name, thermostat in self.devices.items():
+      _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, thermostat._conn._mac)
       try:
         ret += self.update_device_state(name, thermostat)
-      except (RuntimeError, btle.BTLEException):
-        pass
-
+      except btle.BTLEException as e:
+        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, thermostat._conn._mac, type(e).__name__, suppress=True)
     return ret
 
   def on_command(self, topic, value):
+    from bluepy import btle
     _, device_name, method, _ = topic.split('/')
 
     thermostat = self.devices[device_name]
@@ -91,10 +98,19 @@ class ThermostatWorker(BaseWorker):
     elif method == "target_temperature":
       value = float(value)
 
-    setattr(thermostat, method, value)
-    return self.update_device_state(device_name, thermostat)
+    _LOGGER.info("Setting %s to %s on %s device '%s' (%s)", method, value, repr(self), device_name, thermostat._conn._mac)
+    try:
+      setattr(thermostat, method, value)
+    except btle.BTLEException as e:
+      logger.log_exception(_LOGGER, "Error setting %s to %s on %s device '%s' (%s): %s", method, value, repr(self), device_name, thermostat._conn._mac, type(e).__name__)
+      return []
 
-  @timeout(8.0)
+    try:
+      return self.update_device_state(device_name, thermostat)
+    except btle.BTLEException as e:
+      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, thermostat._conn._mac, type(e).__name__, suppress=True)
+      return []
+
   def update_device_state(self, name, thermostat):
     thermostat.update()
 

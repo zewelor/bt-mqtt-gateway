@@ -1,0 +1,29 @@
+version: 1
+disable_existing_loggers: True
+
+formatters:
+  default:
+    format: '%(asctime)s %(message)s'
+    datefmt: '%X'
+  minimal:
+    format: '%(message)s'
+  debug:
+    format: '%(asctime)s %(levelname)s %(name)s %(filename)s:%(lineno)d:%(funcName)s - %(message)s'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: default
+    stream: ext://sys.stdout
+  dummy_debug:
+    class: logging.NullHandler
+    formatter: debug
+
+loggers:
+  bt-mqtt-gw:
+    level: INFO
+  dummy_debug:
+    handlers: [dummy_debug]
+
+root:
+  handlers: [console]
