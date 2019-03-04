@@ -113,7 +113,45 @@ mosquitto_pub -h localhost -t 'mithermometer/update_interval' -m '30'
 
 ## Custom worker development
 
+Create custom worker in workers directory. Add config to the example config:
+ 
+### Example config entry
 
+```yaml
+    timeworker:
+      args:
+        topic_prefix: cool_time_worker
+      update_interval: 1800
+```
+
+Variables set in args section will be set as object attributes in [BaseWorker.__init__](https://github.com/zewelor/bt-mqtt-gateway/blob/master/workers/base.py#L2)
+
+topic_prefix, if specified, will be added to each mqtt message. Alongside with global_prefix set for gateway
+
+
+### Example simple worker
+
+```python
+from mqtt import MqttMessage
+from workers.base import BaseWorker
+
+REQUIREMENTS = ['pip_packages']
+
+class TimeWorker(BaseWorker):
+  def _setup(self):
+    self._some = 'variable'
+
+  def status_update(self):
+    from datetime import datetime
+    
+    return [MqttMessage(topic=self.format_topic('time'), payload=datetime.now())]
+```
+
+`REQUIREMENTS` add required pip packages, they will be installed on first run. Remember to import them in method, not on top of the file, because on initialization, that package won't exists. Unless installed outside of the gateway. Check status_update method
+ 
+`_setup` method - add / declare needed variables.
+
+`status_update` method - It will be called using specified update_interval
 
 ## Built With
 
