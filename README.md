@@ -23,6 +23,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * Xiaomi Aqara thermometer via [mithermometer](https://github.com/hobbypunk90/mithermometer)
 * Bluetooth Low Power devices (BLE)
 * [Oral-B connected toothbrushes](https://oralb.com/en-us/products#viewtype:gridview/facets:feature=feature-bluetooth-connectivity/category:products/page:0/sortby:Featured-Sort/productsdisplayed:undefined/promotilesenabled:undefined/cwidth:3/pscroll:)
+* [Switchbot](https://www.switch-bot.com/)
 
 ## Getting Started
 
@@ -163,6 +164,8 @@ class TimeWorker(BaseWorker):
 * [**bbbenji**](https://github.com/bbbenji) - *Minor contributions*
 * [**elviosebastianelli**](https://github.com/elviosebastianelli) - *BLEscanmulti*
 * [**jumping2000**](https://github.com/jumping2000) - *BLEscan*
+* [**AS137430**](https://github.com/AS137430) - *Switchbot*
+
 
 ## License
 
