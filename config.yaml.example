@@ -12,8 +12,10 @@ manager:
     update_all:
       topic: homeassistant/status
       payload: online
+  command_timeout: 35           # Timeout for worker operations. Can be removed if the default of 35 seconds is sufficient.
   workers:
     mysensors:
+      command_timeout: 35       # Optional override of globally set command_timeout.
       args:
         port: /dev/ttyUSB0
         baudrate: 9600

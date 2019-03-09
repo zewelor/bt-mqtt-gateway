@@ -1,5 +1,6 @@
 class BaseWorker:
-  def __init__(self, **args):
+  def __init__(self, command_timeout, **args):
+    self.command_timeout = command_timeout
     for arg, value in args.items():
       setattr(self, arg, value)
     self._setup()

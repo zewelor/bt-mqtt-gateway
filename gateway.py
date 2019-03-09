@@ -39,8 +39,8 @@ logger.suppress_update_failures(parsed.suppress)
 _LOGGER.info('Starting')
 
 mqtt = MqttClient(settings['mqtt'])
-manager = WorkersManager()
-manager.register_workers(settings['manager']).start(mqtt)
+manager = WorkersManager(settings['manager'])
+manager.register_workers().start(mqtt)
 
 running = True
 
@@ -49,8 +49,8 @@ while running:
     mqtt.publish(_WORKERS_QUEUE.get(timeout=10).execute())
   except queue.Empty: # Allow for SIGINT processing
     pass
-  except TimeoutError:
-    logger.log_exception(_LOGGER, "Timeout while executing worker command", suppress=True)
+  except TimeoutError as e:
+    logger.log_exception(_LOGGER, str(e) if str(e) else 'Timeout while executing worker command', suppress=True)
   except (KeyboardInterrupt, SystemExit):
     running = False
     _LOGGER.info('Finish current jobs and shut down. If you need force exit use kill')
