@@ -11,6 +11,9 @@ REQUIREMENTS = ['bluepy']
 # sudo setcap 'cap_net_raw,cap_net_admin+eip' /usr/local/lib/python3.6/dist-packages/bluepy/bluepy-helper
 
 class MiscaleWorker(BaseWorker):
+
+  SCAN_TIMEOUT = 5
+
   def status_update(self):
     return [MqttMessage(topic=self.format_topic('weight/kg'), payload=self._get_weight())]
 
@@ -19,9 +22,9 @@ class MiscaleWorker(BaseWorker):
 
     scan_processor = ScanProcessor(self.mac)
     scanner = btle.Scanner().withDelegate(scan_processor)
-    scanner.scan(5, passive=True)
+    scanner.scan(SCAN_TIMEOUT, passive=True)
 
-    with timeout(5, exception=TimeoutError):
+    with timeout(SCAN_TIMEOUT, exception=TimeoutError('Retrieving the weight from {} device {} timed out after {} seconds'.format(repr(self), self.mac, SCAN_TIMEOUT))):
       while scan_processor.weight is None:
         time.sleep(1)
       return scan_processor.weight

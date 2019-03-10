@@ -84,8 +84,8 @@ class BlescanmultiWorker(BaseWorker):
   scan_timeout = 10.  # type: float
   scan_passive = True  # type: str or bool
 
-  def __init__(self, **kwargs):
-    super(BlescanmultiWorker, self).__init__(**kwargs)
+  def __init__(self, command_timeout, **kwargs):
+    super(BlescanmultiWorker, self).__init__(command_timeout, **kwargs)
     self.scanner = Scanner().withDelegate(ScanDelegate())
     self.last_status = [
       BleDeviceStatus(self, mac, name) for name, mac in self.devices.items()

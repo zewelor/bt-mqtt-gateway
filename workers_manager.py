@@ -21,38 +21,43 @@ _LOGGER = logger.get(__name__)
 
 class WorkersManager:
   class Command:
-    def __init__(self, callback, args=(), options=dict()):
+    def __init__(self, callback, timeout, args=(), options=dict()):
       self._callback = callback
+      self._timeout = timeout
       self._args = args
       self._options = options
+      self._source = '{}.{}'.format(callback.__self__.__class__.__name__ if hasattr(callback, '__self__') else callback.__module__, callback.__name__)
 
     def execute(self):
       messages = []
-      with timeout(35, exception=TimeoutError):
+      with timeout(self._timeout, exception=TimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
         messages = self._callback(*self._args)
 
-      _LOGGER.debug("Command execution result: %s", messages)
+      _LOGGER.debug('Execution result of command %s: %s', self._source, messages)
       return messages
 
-  def __init__(self):
+  def __init__(self, config):
     self._mqtt_callbacks = []
     self._update_commands = []
     self._scheduler = BackgroundScheduler(timezone=utc)
     self._daemons = []
+    self._config = config
+    self._command_timeout = config.get('command_timeout', 35)
 
-  def register_workers(self, config):
-    for (worker_name, worker_config) in config['workers'].items():
+  def register_workers(self):
+    for (worker_name, worker_config) in self._config['workers'].items():
       module_obj = importlib.import_module("workers.%s" % worker_name)
       klass = getattr(module_obj, "%sWorker" % worker_name.title())
 
       if module_obj.REQUIREMENTS is not None:
         self._pip_install_helper(module_obj.REQUIREMENTS)
 
-      worker_obj = klass(**worker_config['args'])
+      command_timeout = worker_config.get('command_timeout', self._command_timeout)
+      worker_obj = klass(command_timeout, **worker_config['args'])
 
       if hasattr(worker_obj, 'status_update'):
-        _LOGGER.debug("Added %s worker with %d seconds interval", repr(worker_obj), worker_config['update_interval'])
-        command = self.Command(worker_obj.status_update, [])
+        _LOGGER.debug("Added %s worker with %d seconds interval and a %d seconds timeout", repr(worker_obj), worker_config['update_interval'], worker_obj.command_timeout)
+        command = self.Command(worker_obj.status_update, worker_obj.command_timeout, [])
         self._update_commands.append(command)
 
         if 'update_interval' in worker_config:
@@ -77,11 +82,11 @@ class WorkersManager:
           partial(self._on_command_wrapper, worker_obj)
         ))
 
-    if 'topic_subscription' in config:
-      for (callback_name, options) in config['topic_subscription'].items():
+    if 'topic_subscription' in self._config:
+      for (callback_name, options) in self._config['topic_subscription'].items():
         self._mqtt_callbacks.append((
           options['topic'],
-          lambda client, _ , c: self._queue_if_matching_payload(self.Command(getattr(self, callback_name)), c.payload, options['payload']))
+          lambda client, _ , c: self._queue_if_matching_payload(self.Command(getattr(self, callback_name), self._command_timeout), c.payload, options['payload']))
         )
 
     return self
@@ -127,4 +132,4 @@ class WorkersManager:
     _LOGGER.debug("Received command for %s on %s: %s", repr(worker_obj), c.topic, c.payload)
     global_topic_prefix = userdata['global_topic_prefix']
     topic = c.topic[len(global_topic_prefix+'/'):] if global_topic_prefix is not None else c.topic
-    self._queue_command(self.Command(worker_obj.on_command, [topic, c.payload]))
+    self._queue_command(self.Command(worker_obj.on_command, worker_obj.command_timeout, [topic, c.payload]))
