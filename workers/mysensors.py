@@ -1,4 +1,3 @@
-import serial
 from mqtt import MqttMessage
 
 from workers.base import BaseWorker
@@ -10,6 +9,8 @@ _LOGGER = logger.get(__name__)
 
 class MysensorsWorker(BaseWorker):
   def run(self, mqtt):
+    import serial
+
     with serial.Serial(self.port, self.baudrate, timeout=10) as ser:
       _LOGGER.debug("Starting mysensors at: %s" % ser.name)
       while True:
