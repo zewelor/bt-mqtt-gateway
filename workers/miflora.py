@@ -30,6 +30,10 @@ class MifloraWorker(BaseWorker):
         ret += self.update_device_state(name, poller)
       except BluetoothBackendException as e:
         logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, poller._mac, type(e).__name__, suppress=True)
+        ret.append(MqttMessage(topic=self.format_topic(name, "problem"), payload="bluetooth problem"))
+      except TimeoutError as e:
+        logger.log_exception(_LOGGER, "Timeout during update of %s device '%s' (%s): %s", repr(self), name, poller._mac, type(e).__name__, suppress=True)
+        ret.append(MqttMessage(topic=self.format_topic(name, "problem"), payload="timeout"))
     return ret
 
   def update_device_state(self, name, poller):
