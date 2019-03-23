@@ -139,10 +139,10 @@ class TimeWorker(BaseWorker):
 `_setup` method - add / declare needed variables.
 
 `status_update` method - It will be called using specified update_interval
-
-Add config to the example config:
  
 ### Example config entry
+
+Add config to the example [config](https://github.com/zewelor/bt-mqtt-gateway/blob/master/config.yaml.example):
 
 ```yaml
     timeworker:
