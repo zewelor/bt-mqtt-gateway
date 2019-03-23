@@ -114,7 +114,7 @@ mosquitto_pub -h localhost -t 'mithermometer/update_interval' -m '30'
 
 ## Custom worker development
 
-Create custom worker in workers directory. 
+Create custom worker in workers [directory](https://github.com/zewelor/bt-mqtt-gateway/tree/master/workers). 
 
 ### Example simple worker
 
