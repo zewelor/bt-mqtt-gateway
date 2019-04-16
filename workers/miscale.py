@@ -22,9 +22,9 @@ class MiscaleWorker(BaseWorker):
 
     scan_processor = ScanProcessor(self.mac)
     scanner = btle.Scanner().withDelegate(scan_processor)
-    scanner.scan(SCAN_TIMEOUT, passive=True)
+    scanner.scan(self.SCAN_TIMEOUT, passive=True)
 
-    with timeout(SCAN_TIMEOUT, exception=TimeoutError('Retrieving the weight from {} device {} timed out after {} seconds'.format(repr(self), self.mac, SCAN_TIMEOUT))):
+    with timeout(self.SCAN_TIMEOUT, exception=TimeoutError('Retrieving the weight from {} device {} timed out after {} seconds'.format(repr(self), self.mac, self.SCAN_TIMEOUT))):
       while scan_processor.weight is None:
         time.sleep(1)
       return scan_processor.weight
