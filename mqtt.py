@@ -11,7 +11,7 @@ class MqttClient:
     self._config = config
     self._mqttc = mqtt.Client(client_id=self.client_id,
                               clean_session=False,
-                              userdata = {'global_topic_prefix': self.topic_prefix})
+                              userdata={'global_topic_prefix': self.topic_prefix})
 
     if self.username and self.password:
       self.mqttc.username_pw_set(self.username, self.password)
@@ -61,7 +61,14 @@ class MqttClient:
   def mqttc(self):
     return self._mqttc
 
+  def on_connect(self, client, userdata, flags, rc):
+    if self.availability_topic:
+      self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_ONLINE, retain=True)])
+
+
   def callbacks_subscription(self, callbacks):
+    self.mqttc.on_connect = self.on_connect
+
     self.mqttc.connect(self.hostname, port=self.port)
 
     for topic, callback in callbacks:
@@ -71,9 +78,6 @@ class MqttClient:
       self.mqttc.subscribe(topic)
 
     self.mqttc.loop_start()
-
-    if self.availability_topic:
-      self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_ONLINE, retain=True)])
 
   def __del__(self):
     if self.availability_topic:
