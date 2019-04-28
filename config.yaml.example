@@ -68,11 +68,23 @@ manager:
           ix: 00:11:22:33:44:55
           ia: 11:22:33:44:55:66
         topic_prefix: toothbrush
-      update_interval: 10 
+      update_interval: 10
+    toothbrush_homeassistant:
+      args:
+        autodiscovery_prefix: homeassistant
+        topic_prefix: toothbrush
+        devices:
+          ix:
+            name: IX
+            mac: 00:11:22:33:44:55
+          ia:
+            name: IA
+            mac: 11:22:33:44:55:66
+        update_interval: 10
     switchbot:
       args:
         devices:
-          heater: 00:11:22:33:44:55 
+          heater: 00:11:22:33:44:55
         topic_prefix: switchbot/bathroom
         state_topic_prefix: switchbot/bathroom
       topic_subscription: switchbot/+/+/set

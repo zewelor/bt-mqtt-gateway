@@ -10,8 +10,6 @@ import logger
 REQUIREMENTS = ["bluepy"]
 _LOGGER = logger.get(__name__)
 
-AUTODISCOVERY_PREFIX = "homeassistant"
-
 BRUSHSTATES = {
   0: "Unknown",
   1: "Initializing",
@@ -59,7 +57,7 @@ class ScanDelegate(DefaultDelegate):
     if isNewDev:
       _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
-class ToothbrushWorker(BaseWorker):
+class Toothbrush_HomeassistantWorker(BaseWorker):
   def _setup(self):
     self.autoconfCache = {}
 
@@ -69,27 +67,45 @@ class ToothbrushWorker(BaseWorker):
          return dev
     return None
 
-  def get_autoconf_data(self, name):
-    if name in self.autoconfCache:
+  def get_autoconf_data(self, key, name):
+    if key in self.autoconfCache:
       return False
     else:
-      self.autoconfCache[name] = True
+      self.autoconfCache[key] = True
       return {
         "platform": "mqtt",
-        "name": self.topic_prefix+"_"+name,
-        "state_topic":  self.topic_prefix+"/"+name+"/state",
-        "availability_topic":  self.topic_prefix+"/"+name+"/presence",
-        "json_attributes_topic":  self.topic_prefix+"/"+name+"/attributes",
+        "name": name,
+        "state_topic":  self.topic_prefix+"/"+key+"/state",
+        "availability_topic":  self.topic_prefix+"/"+key+"/presence",
+        "json_attributes_topic":  self.topic_prefix+"/"+key+"/attributes",
         "icon": "mdi:tooth-outline"
       }
+
+  def get_state(self, item):
+    if item in BRUSHSTATES:
+      return BRUSHSTATES[item]
+    else:
+      return BRUSHSTATES[0]
+
+  def get_mode(self, item):
+    if item in BRUSHMODES:
+      return BRUSHMODES[item]
+    else:
+      return BRUSHMODES[255]
+
+  def get_sector(self, item):
+    if item in BRUSHSECTORS:
+      return BRUSHSECTORS[item]
+    else:
+      return BRUSHSECTORS[255]
 
   def status_update(self):
     scanner = Scanner().withDelegate(ScanDelegate())
     devices = scanner.scan(5.0)
     ret = []
 
-    for name, mac in self.devices.items():
-      device = self.searchmac(devices, mac)
+    for key, item in self.devices.items():
+      device = self.searchmac(devices, item['mac'])
 
       rssi = 0
       presence = 0
@@ -116,17 +132,17 @@ class ToothbrushWorker(BaseWorker):
         "rssi": rssi,
         "pressure": pressure,
         "time": time,
-        "mode": BRUSHMODES[mode],
-        "sector": BRUSHSECTORS[sector]
+        "mode": self.get_mode(mode),
+        "sector": self.get_sector(sector)
       }
       presence_value = "online" if presence == 1 else "offline"
 
-      ret.append(MqttMessage(topic=self.format_topic(name+"/presence"), payload=presence_value))
-      ret.append(MqttMessage(topic=self.format_topic(name+"/state"), payload=BRUSHSTATES[state]))
-      ret.append(MqttMessage(topic=self.format_topic(name+"/attributes"), payload=json.dumps(attributes)))
+      ret.append(MqttMessage(topic=self.format_topic(key+"/presence"), payload=presence_value))
+      ret.append(MqttMessage(topic=self.format_topic(key+"/state"), payload=self.get_state(state)))
+      ret.append(MqttMessage(topic=self.format_topic(key+"/attributes"), payload=json.dumps(attributes)))
 
-      autoconf_data = self.get_autoconf_data(name)
+      autoconf_data = self.get_autoconf_data(key, item['name'])
       if autoconf_data != False:
-        ret.append(MqttMessage(topic=AUTODISCOVERY_PREFIX+"/sensor/"+self.topic_prefix+"_"+name+"/config", payload=json.dumps(autoconf_data), retain=True))
+        ret.append(MqttMessage(topic=self.autodiscovery_prefix+"/sensor/"+self.topic_prefix+"_"+key+"/config", payload=json.dumps(autoconf_data), retain=True))
 
     return ret
