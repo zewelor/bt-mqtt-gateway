@@ -40,7 +40,7 @@ On a modern Linux system, just a few steps are needed to get the gateway working
 The following example shows the installation under Debian/Raspbian:
 
 ```shell
-sudo apt-get install git python3 python3-pip bluetooth bluez
+sudo apt-get install git python3 python3-pip bluetooth bluez libglib2.0-dev
 git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
 sudo pip3 install -r requirements.txt
