@@ -10,6 +10,7 @@ from bluepy import btle
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 import logger
+import json
 _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = ['bluepy']
@@ -36,34 +37,50 @@ class IbbqWorker(BaseWorker):
     return self.__module__.split(".")[-1]
 
   def status_update(self):
-    ret = list()
-    value = list()
     for name, ibbq in self.devices.items():
+      ret = dict()
+      value=list()
       if not ibbq.connected:
         ibbq.device = ibbq.connect()
         ibbq.subscribe()
-      if ibbq.connected:
-        _LOGGER.debug("device %s connected", name)
-        value = ibbq.update()
-        if not value:
-          return
+        bat, value = None, value
+      else:
+        bat, value = ibbq.update()
       n = 0
+      ret['available'] = ibbq.connected
+      ret['battery_level'] = bat 
       for i in value:
         n += 1
-        ret.append(MqttMessage(topic=self.format_static_topic(name, str(n)), payload=i))
-      return(ret)
+        ret['Temp{}'.format(n)] = i
+      return([MqttMessage(topic=self.format_static_topic(name), payload = json.dumps(ret))])
 
 
 class ibbqThermometer():
+  SettingResult = "fff1"
   AccountAndVerify = 'fff2'
   RealTimeData = 'fff4'
   SettingData = 'fff5'
   Notify = b'\x01\x00'
   realTimeDataEnable = bytearray([0x0B, 0x01, 0x00, 0x00, 0x00, 0x00])
+  batteryLevel = bytearray([0x08, 0x24, 0x00, 0x00, 0x00, 0x00])
   KEY = bytearray([0x21, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
            0xb8, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00])
 
+
+  def getBattery(self):
+    self.Setting_uuid.write(self.batteryLevel)
+
+  def connect(self, timeout=5):
+    try:
+      device =(btle.Peripheral(self.mac))
+      _LOGGER.debug("%s connected ", self.mac)
+      return device
+    except btle.BTLEDisconnectError as er:
+      _LOGGER.debug("failed connect %s", er)
+
   def __init__(self, mac, timeout=5):
+    self.cnt = 0
+    self.batteryPct = 0
     self.timeout = timeout
     self.mac = mac
     self.values = list()
@@ -76,13 +93,7 @@ class ibbqThermometer():
   @property
   def connected(self):
     return(bool(self.device))
-
-  def connect(self, timeout=5):
-    try:
-      return(btle.Peripheral(self.mac))
-    except btle.BTLEDisconnectError as er:
-      _LOGGER.debug("failed connect %s", er)
-
+  
   def subscribe(self, timeout=5):
     if self.device is None:
       return
@@ -93,17 +104,23 @@ class ibbqThermometer():
           continue
         for schar in service.getCharacteristics():
           if self.AccountAndVerify in str(schar.uuid):
-            account_uuid = schar
+            self.account_uuid = schar
           if self.RealTimeData in str(schar.uuid):
-            RT_uuid = schar
+            self.RT_uuid = schar
           if self.SettingData in str(schar.uuid):
-            Setting_uuid = schar
-      account_uuid.write(self.KEY)
+            self.Setting_uuid = schar
+          if self.SettingResult in str(schar.uuid):
+            self.SettingResult_uuid = schar
+
+      self.account_uuid.write(self.KEY)
       _LOGGER.info("Authenticated %s", self.mac)
-      self.device.writeCharacteristic(RT_uuid.getHandle() + 1, self.Notify)
-      Setting_uuid.write(self.realTimeDataEnable)
+      self.RT_uuid.getDescriptors()
+      self.device.writeCharacteristic(self.RT_uuid.getHandle() + 1, self.Notify)
+      self.device.writeCharacteristic(self.SettingResult_uuid.getHandle() +1, self.Notify)
+      self.getBattery()
+      self.Setting_uuid.write(self.realTimeDataEnable)
       self.device.withDelegate(MyDelegate(self))
-      _LOGGER.info("enable RT and enabled notify for %s", self.mac)
+      _LOGGER.info("Subscribed %s", self.mac)
       self.offline = 0
     except btle.BTLEException as ex:
       _LOGGER.info("failed %s %s", self.mac, ex)
@@ -113,22 +130,24 @@ class ibbqThermometer():
 
   def update(self):
     if not self.connected:
-      return
-    self.values = None
+      return list()
+    self.values = list()
+    self.cnt += 1
     try:
-      while self.device.waitForNotifications(0.1):
+      if self.cnt >5:
+        self.cnt = 0
+        self.getBattery()
+      while self.device.waitForNotifications(1):
         pass
-      _LOGGER.debug("update succeeded")
       if self.values:
         self.offline = 0
-        return(self.values)
       else:
         _LOGGER.debug("%s is silent", self.mac)
-        if self.offline > 1:
+        if self.offline > 3:
           try:
             self.device.disconnect()
-          except btle.BTLEInternalError:
-            pass
+          except btle.BTLEInternalError as e:
+            _LOGGER.debug("%s", e)
           self.device = None
           _LOGGER.debug("%s reconnect", self.mac)
         else:
@@ -136,19 +155,29 @@ class ibbqThermometer():
     except btle.BTLEDisconnectError as e:
       _LOGGER.debug("%s", e)
       self.device = None
-
+    finally:
+      return(self.batteryPct,  self.values)
 
 class MyDelegate(btle.DefaultDelegate):
 
   def __init__(self, caller):
     btle.DefaultDelegate.__init__(self)
     self.caller = caller
+    _LOGGER.debug("init mydelegate")
 
   def handleNotification(self, cHandle, data):
-    result = []
-    safe = data
-    while (len(data) > 0):
-      v, data = data[0:2], data[2:]
-      result.append(struct.unpack('<H', v)[0]/10)
-    self.caller.values = result
-    _LOGGER.debug("called handler %s %s", result, safe)
+    batMin = 0.95
+    batMax = 1.5
+    result = list()
+#    safe = data
+    if cHandle == 37:
+      if data[0] == 0x24:
+        currentV = struct.unpack('<H', data[1:3])
+        maxV = struct.unpack('<H', data[3:5])
+        self.caller.batteryPct = int(100* ((batMax *currentV[0]/maxV[0] -batMin)/(batMax-batMin)))
+    else:
+      while (len(data) > 0):
+        v, data = data[0:2], data[2:]
+        result.append(struct.unpack('<H', v)[0]/10)
+      self.caller.values = result
+#    _LOGGER.debug("called handler %s %s", cHandle, safe)
