@@ -35,6 +35,7 @@ class MifloraWorker(BaseWorker):
         payload = {"unique_id": self.format_topic(name, 'illuminance', separator="_"),
                    "state_topic": self.format_topic(name, attr),
                    "device_class": 'illuminance',
+                   "unit_of_measurement": "lux",
                    "device": device}
       elif attr == 'moisture':
         payload = {"unique_id": self.format_topic(name, attr, separator="_"),
