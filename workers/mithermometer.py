@@ -1,11 +1,11 @@
 import logging
 
-from mqtt import MqttMessage
+from mqtt import MqttMessage, MqttConfigMessage
 
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ['git+https://github.com/cybe/mithermometer.git@cd8dba297927da823fbfa8f50bd97393ea6a93c1#egg=mithermometer']
+REQUIREMENTS = ['mithermometer']
 monitoredAttrs = ["temperature", "humidity", "battery"]
 _LOGGER = logger.get(__name__)
 
@@ -20,8 +20,22 @@ class MithermometerWorker(BaseWorker):
       _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
       self.devices[name] = MiThermometerPoller(mac, BluepyBackend)
 
+  def config(self):
+    ret = []
+    for name, poller in self.devices.items():
+      ret += self.config_device(name)
+    return ret
+
+  def config_device(self, name):
+    ret = []
+    device={"identifiers": self.format_topic(name, separator="_"), "manufacturer": "Xiaomi", "model": "LYWSD(CGQ/01ZM)", "name": self.format_topic(name, separator=" ").title()}
+    for attr in monitoredAttrs:
+      payload = {"unique_id": self.format_topic(name, attr, separator="_"), "state_topic": self.format_topic(name, attr), "device_class": attr, "device": device}
+      ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_topic(name, attr, separator="_"), payload=payload))
+
+    return ret
+
   def status_update(self):
-    from btlewrap.base import BluetoothBackendException
     _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
     ret = []
     for name, poller in self.devices.items():
