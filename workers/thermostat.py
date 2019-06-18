@@ -1,7 +1,7 @@
 from builtins import staticmethod
 import logging
 
-from mqtt import MqttMessage
+from mqtt import MqttMessage, MqttConfigMessage
 
 from workers.base import BaseWorker
 import logger
@@ -13,6 +13,7 @@ _LOGGER = logger.get(__name__)
 STATE_AWAY = 'away'
 STATE_ECO  = 'eco'
 STATE_HEAT = 'heat'
+STATE_AUTO = 'auto'
 STATE_MANUAL = 'manual'
 STATE_ON = 'on'
 STATE_OFF = 'off'
@@ -26,10 +27,10 @@ class ThermostatWorker(BaseWorker):
       self._mapped_modes = {
         Mode.Closed: STATE_OFF,
         Mode.Open: STATE_ON,
-        Mode.Auto: STATE_HEAT,
+        Mode.Auto: STATE_AUTO,
         Mode.Manual: STATE_MANUAL,
         Mode.Away: STATE_ECO,
-        Mode.Boost: 'boost',
+        Mode.Boost: STATE_HEAT,
       }
 
       self._reverse_modes = {v: k for k, v in self._mapped_modes.items()}
@@ -56,7 +57,6 @@ class ThermostatWorker(BaseWorker):
       else:
         return STATE_HEAT
 
-
   def _setup(self):
     from eq3bt import Thermostat
 
@@ -66,6 +66,62 @@ class ThermostatWorker(BaseWorker):
       self.devices[name] = Thermostat(mac)
 
     self._modes_mapper = self.ModesMapper()
+
+  def config(self):
+    ret = []
+    for name, thermostat in self.devices.items():
+      ret += self.config_device(name)
+    return ret
+
+  def config_device(self, name):
+    ret = []
+    device={"identifiers": self.format_topic(name, separator="_"),
+            "manufacturer": "eQ-3",
+            "model": "Smart Radiator Thermostat",
+            "name": self.format_topic(name, separator=" ").title()}
+
+    payload = {"unique_id": self.format_topic(name, 'climate', separator="_"),
+               "qos": 1,
+               "temperature_state_topic": self.format_topic(name, 'target_temperature'),
+               "temperature_command_topic": self.format_topic(name, 'target_temperature', 'set'),
+               "mode_state_topic": self.format_topic(name, 'mode'),
+               "mode_command_topic": self.format_topic(name, 'mode', 'set'),
+               "away_mode_state_topic": self.format_topic(name, 'away'),
+               "away_command_topic": self.format_topic(name, 'away', 'set'),
+               "temp_step": 0.5,
+               "payload_on": "'on'",
+               "payload_off": "'off'",
+               "modes": ["heat", "auto", "manual", "eco", 'off'],
+               "device": device}
+    ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_topic(name, 'climate', separator="_"), payload=payload))
+
+    payload = {"unique_id": self.format_topic(name, 'window_open', separator="_"),
+               "state_topic": self.format_topic(name, 'window_open'),
+               "device_class": 'window',
+               "device": device}
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'window_open', separator="_"), payload=payload))
+
+    payload = {"unique_id": self.format_topic(name, 'low_battery', separator="_"),
+               "state_topic": self.format_topic(name, 'low_battery'),
+               "device_class": 'battery',
+               "device": device}
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'low_battery', separator="_"), payload=payload))
+
+    payload = {"unique_id": self.format_topic(name, 'locked', separator="_"),
+               "state_topic": self.format_topic(name, 'locked'),
+               "device_class": 'lock',
+               "device": device}
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'locked', separator="_"),
+                                 payload=payload))
+
+    payload = {"unique_id": self.format_topic(name, "valve_state", separator="_"),
+               "state_topic": self.format_topic(name, "valve_state"),
+               "unit_of_measurement": "%",
+               "device": device}
+    ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_topic(name, 'valve_state', separator="_"), payload=payload))
+
+    return ret
+
 
   def status_update(self):
     from bluepy import btle
