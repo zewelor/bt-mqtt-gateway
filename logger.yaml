@@ -4,7 +4,7 @@ disable_existing_loggers: True
 formatters:
   default:
     format: '%(asctime)s %(message)s'
-    datefmt: '%Y-%m-%d %I:%M:%S %p'
+    datefmt: '%X'
   minimal:
     format: '%(message)s'
   debug:
