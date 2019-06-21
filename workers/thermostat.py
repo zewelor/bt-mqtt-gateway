@@ -63,24 +63,24 @@ class ThermostatWorker(BaseWorker):
     _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
     for name, mac in self.devices.items():
       _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
-      self.devices[name] = Thermostat(mac)
+      self.devices[name] = {"mac": mac, "thermostat": Thermostat(mac)}
 
     self._modes_mapper = self.ModesMapper()
 
   def config(self):
     ret = []
-    for name, thermostat in self.devices.items():
-      ret += self.config_device(name)
+    for name, data in self.devices.items():
+      ret += self.config_device(name, data["mac"])
     return ret
 
-  def config_device(self, name):
+  def config_device(self, name, mac):
     ret = []
-    device={"identifiers": self.format_topic(name, separator="_"),
+    device={"identifiers": [mac, self.format_id(name, separator="_")],
             "manufacturer": "eQ-3",
             "model": "Smart Radiator Thermostat",
             "name": self.format_topic(name, separator=" ").title()}
 
-    payload = {"unique_id": self.format_topic(name, 'climate', separator="_"),
+    payload = {"unique_id": self.format_id(name, 'climate', separator="_"),
                "qos": 1,
                "temperature_state_topic": self.format_topic(name, 'target_temperature'),
                "temperature_command_topic": self.format_topic(name, 'target_temperature', 'set'),
@@ -97,26 +97,26 @@ class ThermostatWorker(BaseWorker):
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_topic(name, 'climate', separator="_"), payload=payload))
 
-    payload = {"unique_id": self.format_topic(name, 'window_open', separator="_"),
+    payload = {"unique_id": self.format_id(name, 'window_open', separator="_"),
                "state_topic": self.format_topic(name, 'window_open'),
                "device_class": 'window',
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'window_open', separator="_"), payload=payload))
 
-    payload = {"unique_id": self.format_topic(name, 'low_battery', separator="_"),
+    payload = {"unique_id": self.format_id(name, 'low_battery', separator="_"),
                "state_topic": self.format_topic(name, 'low_battery'),
                "device_class": 'battery',
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'low_battery', separator="_"), payload=payload))
 
-    payload = {"unique_id": self.format_topic(name, 'locked', separator="_"),
+    payload = {"unique_id": self.format_id(name, 'locked', separator="_"),
                "state_topic": self.format_topic(name, 'locked'),
                "device_class": 'lock',
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'locked', separator="_"),
                                  payload=payload))
 
-    payload = {"unique_id": self.format_topic(name, "valve_state", separator="_"),
+    payload = {"unique_id": self.format_id(name, "valve_state", separator="_"),
                "state_topic": self.format_topic(name, "valve_state"),
                "unit_of_measurement": "%",
                "device": device}
@@ -130,19 +130,19 @@ class ThermostatWorker(BaseWorker):
 
     ret = []
     _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
-    for name, thermostat in self.devices.items():
-      _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, thermostat._conn._mac)
+    for name, data in self.devices.items():
+      _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
       try:
-        ret += self.update_device_state(name, thermostat)
+        ret += self.update_device_state(name, data["thermostat"])
       except btle.BTLEException as e:
-        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, thermostat._conn._mac, type(e).__name__, suppress=True)
+        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
     return ret
 
   def on_command(self, topic, value):
     from bluepy import btle
     _, device_name, method, _ = topic.split('/')
 
-    thermostat = self.devices[device_name]
+    data = self.devices[device_name]
 
     value = value.decode('utf-8')
 
@@ -156,17 +156,17 @@ class ThermostatWorker(BaseWorker):
     elif method == "target_temperature":
       value = float(value)
 
-    _LOGGER.info("Setting %s to %s on %s device '%s' (%s)", method, value, repr(self), device_name, thermostat._conn._mac)
+    _LOGGER.info("Setting %s to %s on %s device '%s' (%s)", method, value, repr(self), device_name, data["mac"])
     try:
-      setattr(thermostat, method, value)
+      setattr(data["thermostat"], method, value)
     except btle.BTLEException as e:
-      logger.log_exception(_LOGGER, "Error setting %s to %s on %s device '%s' (%s): %s", method, value, repr(self), device_name, thermostat._conn._mac, type(e).__name__)
+      logger.log_exception(_LOGGER, "Error setting %s to %s on %s device '%s' (%s): %s", method, value, repr(self), device_name, data["mac"], type(e).__name__)
       return []
 
     try:
-      return self.update_device_state(device_name, thermostat)
+      return self.update_device_state(device_name, data["thermostat"])
     except btle.BTLEException as e:
-      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, thermostat._conn._mac, type(e).__name__, suppress=True)
+      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, data["mac"], type(e).__name__, suppress=True)
       return []
 
   def update_device_state(self, name, thermostat):
