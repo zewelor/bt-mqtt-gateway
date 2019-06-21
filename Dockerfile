@@ -18,7 +18,6 @@ RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-li
     mkdir /config && \
     pip install -r requirements.txt && \
     ln -s /config/config.yaml ./config.yaml && \
-    cp ./config.yaml.example /config/config.yaml.example && \
     apk del --no-cache bluez-dev musl-dev gcc make git glib-dev linux-headers grep python2
 
 RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-libs musl-dev linux-headers gcc grep && \
