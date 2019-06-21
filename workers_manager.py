@@ -38,6 +38,7 @@ class WorkersManager:
 
   def __init__(self, config):
     self._mqtt_callbacks = []
+    self._config_commands = []
     self._update_commands = []
     self._scheduler = BackgroundScheduler(timezone=utc)
     self._daemons = []
@@ -54,6 +55,11 @@ class WorkersManager:
 
       command_timeout = worker_config.get('command_timeout', self._command_timeout)
       worker_obj = klass(command_timeout, **worker_config['args'])
+
+      if 'sensor_config' in self._config and hasattr(worker_obj, 'config'):
+        _LOGGER.debug("Added %s config with a %d seconds timeout", repr(worker_obj), 2)
+        command = self.Command(worker_obj.config, 2, [])
+        self._config_commands.append(command)
 
       if hasattr(worker_obj, 'status_update'):
         _LOGGER.debug("Added %s worker with %d seconds interval and a %d seconds timeout", repr(worker_obj), worker_config['update_interval'], worker_obj.command_timeout)
@@ -93,6 +99,10 @@ class WorkersManager:
 
   def start(self, mqtt):
     mqtt.callbacks_subscription(self._mqtt_callbacks)
+
+    if 'sensor_config' in self._config:
+      self._publish_config(mqtt)
+
     self._scheduler.start()
     self.update_all()
     for daemon in self._daemons:
@@ -133,3 +143,11 @@ class WorkersManager:
     global_topic_prefix = userdata['global_topic_prefix']
     topic = c.topic[len(global_topic_prefix+'/'):] if global_topic_prefix is not None else c.topic
     self._queue_command(self.Command(worker_obj.on_command, worker_obj.command_timeout, [topic, c.payload]))
+
+  def _publish_config(self, mqtt):
+    for command in self._config_commands:
+      messages = command.execute()
+      for msg in messages:
+        msg.topic = "{}/{}".format(self._config['sensor_config'].get('topic', 'homeassistant'), msg.topic)
+        msg.retain = self._config['sensor_config'].get('retain', True)
+      mqtt.publish(messages)

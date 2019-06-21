@@ -8,6 +8,9 @@ mqtt:
   availability_topic: lwt_topic
 
 manager:
+  sensor_config:
+    topic: homeassistant
+    retain: true
   topic_subscription:
     update_all:
       topic: homeassistant/status

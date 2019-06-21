@@ -1,3 +1,5 @@
+import json
+
 import paho.mqtt.client as mqtt
 import logger
 
@@ -65,7 +67,6 @@ class MqttClient:
     if self.availability_topic:
       self.publish([MqttMessage(topic=self.availability_topic, payload=LWT_ONLINE, retain=True)])
 
-
   def callbacks_subscription(self, callbacks):
     self.mqttc.on_connect = self.on_connect
 
@@ -85,6 +86,7 @@ class MqttClient:
 
   def _format_topic(self, topic):
     return "{}/{}".format(self.topic_prefix, topic) if self.topic_prefix else topic
+
 
 class MqttMessage:
   def __init__(self, topic=None, payload=None, retain=False):
@@ -120,3 +122,22 @@ class MqttMessage:
 
   def __str__(self):
     return self.__repr__()
+
+
+class MqttConfigMessage(MqttMessage):
+  SENSOR = 'sensor'
+  CLIMATE = 'climate'
+  BINARY_SENSOR = 'binary_sensor'
+
+  def __init__(self, component, name, payload=None, retain=False):
+    if 'name' not in payload: payload['name'] = name
+    super().__init__("{}/{}/config".format(component, name), json.dumps(payload), retain)
+
+  @property
+  def retain(self):
+    return self._retain
+
+  @retain.setter
+  def retain(self, new_retain):
+    self._retain = new_retain
+
