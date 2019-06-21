@@ -32,7 +32,6 @@ ADD ./start.sh /start.sh
 RUN chmod +x /start.sh
 
 ENV DEBUG false
-ENV TZ Europe/Berlin
 
 VOLUME ["/config"]
 
