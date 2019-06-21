@@ -8,6 +8,9 @@ class BaseWorker:
   def _setup(self):
     return
 
+  def format_id(self, *args, separator='/'):
+    return separator.join(["bt-mqtt-gateway", repr(self), *args])
+
   def format_topic(self, *args, separator='/'):
     return separator.join([self.topic_prefix, *args])
 

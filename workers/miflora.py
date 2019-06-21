@@ -16,41 +16,41 @@ class MifloraWorker(BaseWorker):
     _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
     for name, mac in self.devices.items():
       _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
-      self.devices[name] = MiFloraPoller(mac, BluepyBackend)
+      self.devices[name] = {"mac": mac, "poller": MiFloraPoller(mac, BluepyBackend)}
 
   def config(self):
     ret = []
-    for name, poller in self.devices.items():
-      ret += self.config_device(name)
+    for name, data in self.devices.items():
+      ret += self.config_device(name, data["mac"])
     return ret
 
-  def config_device(self, name):
+  def config_device(self, name, mac):
     ret = []
-    device={"identifiers": self.format_topic(name, separator="_"),
+    device={"identifiers": [mac, self.format_id(name, separator="_")],
             "manufacturer": "Xiaomi",
             "model": "MiFlora",
             "name": self.format_topic(name, separator=" ").title()}
     for attr in monitoredAttrs:
       if attr == 'light':
-        payload = {"unique_id": self.format_topic(name, 'illuminance', separator="_"),
+        payload = {"unique_id": self.format_id(name, 'illuminance', separator="_"),
                    "state_topic": self.format_topic(name, attr),
                    "device_class": 'illuminance',
                    "unit_of_measurement": "lux",
                    "device": device}
       elif attr == 'moisture':
-        payload = {"unique_id": self.format_topic(name, attr, separator="_"),
+        payload = {"unique_id": self.format_id(name, attr, separator="_"),
                    "state_topic": self.format_topic(name, attr),
                    "icon": 'mdi:water',
                    "unit_of_measurement": "%",
                    "device": device}
       elif attr == 'conductivity':
-        payload = {"unique_id": self.format_topic(name, attr, separator="_"),
+        payload = {"unique_id": self.format_id(name, attr, separator="_"),
                    "state_topic": self.format_topic(name, attr),
                    "icon": 'mdi:leaf',
                    "unit_of_measurement": "µS/cm",
                    "device": device}
       else:
-        payload = {"unique_id": self.format_topic(name, attr, separator="_"),
+        payload = {"unique_id": self.format_id(name, attr, separator="_"),
                    "state_topic": self.format_topic(name, attr),
                    "device_class": attr,
                    "device": device}
@@ -61,12 +61,13 @@ class MifloraWorker(BaseWorker):
   def status_update(self):
     _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
     ret = []
-    for name, poller in self.devices.items():
-      _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, poller._mac)
+    for name, data in self.devices.items():
+      _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
+      from btlewrap import BluetoothBackendException
       try:
-        ret += self.update_device_state(name, poller)
+        ret += self.update_device_state(name, data["poller"])
       except BluetoothBackendException as e:
-        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, poller._mac, type(e).__name__, suppress=True)
+        logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
     return ret
 
   def update_device_state(self, name, poller):
