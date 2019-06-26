@@ -100,18 +100,24 @@ class ThermostatWorker(BaseWorker):
     payload = {"unique_id": self.format_id(name, 'window_open', separator="_"),
                "state_topic": self.format_topic(name, 'window_open'),
                "device_class": 'window',
+               "payload_on": "True",
+               "payload_off": "False",
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'window_open', separator="_"), payload=payload))
 
     payload = {"unique_id": self.format_id(name, 'low_battery', separator="_"),
                "state_topic": self.format_topic(name, 'low_battery'),
                "device_class": 'battery',
+               "payload_on": "True",
+               "payload_off": "False",
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'low_battery', separator="_"), payload=payload))
 
     payload = {"unique_id": self.format_id(name, 'locked', separator="_"),
                "state_topic": self.format_topic(name, 'locked'),
                "device_class": 'lock',
+               "payload_on": "False",
+               "payload_off": "True",
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'locked', separator="_"),
                                  payload=payload))
