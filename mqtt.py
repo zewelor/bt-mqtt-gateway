@@ -130,7 +130,6 @@ class MqttConfigMessage(MqttMessage):
   BINARY_SENSOR = 'binary_sensor'
 
   def __init__(self, component, name, payload=None, retain=False):
-    if 'name' not in payload: payload['name'] = name
     super().__init__("{}/{}/config".format(component, name), json.dumps(payload), retain)
 
   @property

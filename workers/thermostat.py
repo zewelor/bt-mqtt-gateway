@@ -7,7 +7,6 @@ from workers.base import BaseWorker
 import logger
 
 REQUIREMENTS = ['python-eq3bt']
-monitoredAttrs = ["low_battery", "valve_state", "target_temperature", "window_open", "locked"]
 _LOGGER = logger.get(__name__)
 
 STATE_AWAY = 'away'
@@ -17,6 +16,15 @@ STATE_AUTO = 'auto'
 STATE_MANUAL = 'manual'
 STATE_ON = 'on'
 STATE_OFF = 'off'
+
+SENSOR_CLIMATE = 'climate'
+SENSOR_WINDOW = 'window_open'
+SENSOR_BATTERY = 'low_battery'
+SENSOR_LOCKED = 'locked'
+SENSOR_VALVE = 'valve_state'
+SENSOR_TARGET_TEMPERATURE = 'target_temperature'
+
+monitoredAttrs = [SENSOR_BATTERY, SENSOR_VALVE, SENSOR_TARGET_TEMPERATURE, SENSOR_WINDOW, SENSOR_LOCKED]
 
 
 class ThermostatWorker(BaseWorker):
@@ -75,15 +83,16 @@ class ThermostatWorker(BaseWorker):
 
   def config_device(self, name, mac):
     ret = []
-    device={"identifiers": [mac, self.format_id(name, separator="_")],
+    device={"identifiers": [mac, self.format_discovery_id(mac, name)],
             "manufacturer": "eQ-3",
             "model": "Smart Radiator Thermostat",
-            "name": self.format_topic(name, separator=" ").title()}
+            "name": self.format_discovery_name(name)}
 
-    payload = {"unique_id": self.format_id(name, 'climate', separator="_"),
+    payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_CLIMATE),
+               "name": self.format_discovery_name(name, SENSOR_CLIMATE),
                "qos": 1,
-               "temperature_state_topic": self.format_topic(name, 'target_temperature'),
-               "temperature_command_topic": self.format_topic(name, 'target_temperature', 'set'),
+               "temperature_state_topic": self.format_topic(name, SENSOR_TARGET_TEMPERATURE),
+               "temperature_command_topic": self.format_topic(name, SENSOR_TARGET_TEMPERATURE, 'set'),
                "mode_state_topic": self.format_topic(name, 'mode'),
                "mode_command_topic": self.format_topic(name, 'mode', 'set'),
                "away_mode_state_topic": self.format_topic(name, 'away'),
@@ -93,40 +102,44 @@ class ThermostatWorker(BaseWorker):
                "temp_step": 0.5,
                "payload_on": "'on'",
                "payload_off": "'off'",
-               "modes": ["heat", "auto", "manual", "eco", 'off'],
+               "modes": [STATE_HEAT, STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF],
                "device": device}
-    ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_topic(name, 'climate', separator="_"), payload=payload))
+    ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_discovery_topic(mac, name, SENSOR_CLIMATE), payload=payload))
 
-    payload = {"unique_id": self.format_id(name, 'window_open', separator="_"),
-               "state_topic": self.format_topic(name, 'window_open'),
+    payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_WINDOW),
+               "name": self.format_discovery_name(name, SENSOR_WINDOW),
+               "state_topic": self.format_topic(name, SENSOR_WINDOW),
                "device_class": 'window',
                "payload_on": "True",
                "payload_off": "False",
                "device": device}
-    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'window_open', separator="_"), payload=payload))
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_discovery_topic(mac, name, SENSOR_WINDOW), payload=payload))
 
-    payload = {"unique_id": self.format_id(name, 'low_battery', separator="_"),
-               "state_topic": self.format_topic(name, 'low_battery'),
+    payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_BATTERY),
+               "name": self.format_discovery_name(name, SENSOR_BATTERY),
+               "state_topic": self.format_topic(name, SENSOR_BATTERY),
                "device_class": 'battery',
                "payload_on": "True",
                "payload_off": "False",
                "device": device}
-    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'low_battery', separator="_"), payload=payload))
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_discovery_topic(mac, name, SENSOR_BATTERY), payload=payload))
 
-    payload = {"unique_id": self.format_id(name, 'locked', separator="_"),
-               "state_topic": self.format_topic(name, 'locked'),
+    payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_LOCKED),
+               "name": self.format_discovery_name(name, SENSOR_LOCKED),
+               "state_topic": self.format_topic(name, SENSOR_LOCKED),
                "device_class": 'lock',
                "payload_on": "False",
                "payload_off": "True",
                "device": device}
-    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_topic(name, 'locked', separator="_"),
+    ret.append(MqttConfigMessage(MqttConfigMessage.BINARY_SENSOR, self.format_discovery_topic(mac, name, SENSOR_LOCKED),
                                  payload=payload))
 
-    payload = {"unique_id": self.format_id(name, "valve_state", separator="_"),
-               "state_topic": self.format_topic(name, "valve_state"),
+    payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_VALVE),
+               "name": self.format_discovery_name(name, SENSOR_VALVE),
+               "state_topic": self.format_topic(name, SENSOR_VALVE),
                "unit_of_measurement": "%",
                "device": device}
-    ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_topic(name, 'valve_state', separator="_"), payload=payload))
+    ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_discovery_topic(mac, name, SENSOR_VALVE), payload=payload))
 
     return ret
 

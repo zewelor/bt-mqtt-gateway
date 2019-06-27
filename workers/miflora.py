@@ -26,35 +26,49 @@ class MifloraWorker(BaseWorker):
 
   def config_device(self, name, mac):
     ret = []
-    device={"identifiers": [mac, self.format_id(name, separator="_")],
-            "manufacturer": "Xiaomi",
-            "model": "MiFlora",
-            "name": self.format_topic(name, separator=" ").title()}
+    device = {
+        "identifiers": [mac, self.format_discovery_id(mac, name)],
+        "manufacturer": "Xiaomi",
+        "model": "MiFlora",
+        "name": self.format_discovery_name(name)
+    }
+
     for attr in monitoredAttrs:
+      payload = {
+          "unique_id": self.format_discovery_id(mac, name, attr),
+          "state_topic": self.format_topic(name, attr),
+          "name": self.format_discovery_name(name, attr),
+          "device": device
+      }
+
       if attr == 'light':
-        payload = {"unique_id": self.format_id(name, 'illuminance', separator="_"),
-                   "state_topic": self.format_topic(name, attr),
-                   "device_class": 'illuminance',
-                   "unit_of_measurement": "lux",
-                   "device": device}
+        payload.update({
+            "unique_id": self.format_discovery_id(mac, name, 'illuminance'),
+            "device_class": 'illuminance',
+            "unit_of_measurement": "lux"
+        })
       elif attr == 'moisture':
-        payload = {"unique_id": self.format_id(name, attr, separator="_"),
-                   "state_topic": self.format_topic(name, attr),
-                   "icon": 'mdi:water',
-                   "unit_of_measurement": "%",
-                   "device": device}
+        payload.update({
+            "icon": 'mdi:water',
+            "unit_of_measurement": "%"
+        })
       elif attr == 'conductivity':
-        payload = {"unique_id": self.format_id(name, attr, separator="_"),
-                   "state_topic": self.format_topic(name, attr),
-                   "icon": 'mdi:leaf',
-                   "unit_of_measurement": "µS/cm",
-                   "device": device}
-      else:
-        payload = {"unique_id": self.format_id(name, attr, separator="_"),
-                   "state_topic": self.format_topic(name, attr),
-                   "device_class": attr,
-                   "device": device}
-      ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_topic(name, attr, separator="_"), payload=payload))
+        payload.update({
+            "icon": 'mdi:leaf',
+            "unit_of_measurement": "µS/cm"
+        })
+      elif attr == "temperature":
+        payload.update({
+            "device_class": "temperature",
+            "unit_of_measurement": "°C"
+        })
+      elif attr == "battery":
+        payload.update({
+            "device_class": "battery",
+            "unit_of_measurement": "%"
+        })
+
+      ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_discovery_topic(mac, name, attr), payload=payload))
 
     return ret
 
