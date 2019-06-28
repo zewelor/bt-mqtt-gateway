@@ -159,7 +159,8 @@ class ThermostatWorker(BaseWorker):
 
   def on_command(self, topic, value):
     from bluepy import btle
-    _, device_name, method, _ = topic.split('/')
+    topic_without_prefix = topic.replace('{}/'.format(self.topic_prefix), '')
+    device_name, method, _ = topic_without_prefix.split('/')
 
     data = self.devices[device_name]
 
