@@ -5,7 +5,7 @@ from mqtt import MqttMessage, MqttConfigMessage
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ['mithermometer']
+REQUIREMENTS = ['mithermometer', 'bluepy']
 monitoredAttrs = ["temperature", "humidity", "battery"]
 _LOGGER = logger.get(__name__)
 
