@@ -100,8 +100,8 @@ class ThermostatWorker(BaseWorker):
                "min_temp": 5.0,
                "max_temp": 29.5,
                "temp_step": 0.5,
-               "payload_on": "'on'",
-               "payload_off": "'off'",
+               "payload_on": "on",
+               "payload_off": "off",
                "modes": [STATE_HEAT, STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF],
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_discovery_topic(mac, name, SENSOR_CLIMATE), payload=payload))
