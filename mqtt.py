@@ -18,6 +18,11 @@ class MqttClient:
     if self.username and self.password:
       self.mqttc.username_pw_set(self.username, self.password)
 
+    if self.ca_cert:
+      cert_reqs = mqtt.ssl.CERT_REQUIRED if self.ca_verify else mqtt.ssl.CERT_NONE
+      self.mqttc.tls_set(self.ca_cert, cert_reqs = cert_reqs)
+      self.mqttc.tls_insecure_set(not self.ca_verify)
+
     if self.availability_topic:
       topic = self._format_topic(self.availability_topic)
       _LOGGER.debug("Setting LWT to: %s" % topic)
@@ -50,6 +55,20 @@ class MqttClient:
   @property
   def password(self):
     return self._config['password'] if 'password' in self._config else None
+
+  @property
+  def ca_cert(self):
+    return self._config['ca_cert'] if 'ca_cert' in self._config else None
+
+  @property
+  def ca_verify(self):
+    if 'ca_verify' in self._config:
+      if self._config['ca_verify']:
+        return True
+      else:
+        return False
+    else:
+      return True
 
   @property
   def topic_prefix(self):

@@ -3,6 +3,8 @@ mqtt:
   port: 1883
   username: user
   password: password
+  #ca_cert: /etc/ssl/certs/ca-certificates.crt # Uncomment to enable MQTT TLS, update path to appropriate location.
+  #ca_verify: False              # Verify TLS certificate chain and host, disable for testing with self-signed certificates, default to True
   topic_prefix: hostname         # All messages will have that prefix added, remove if you dont need this.
   client_id: bt-mqtt-gateway
   availability_topic: lwt_topic
