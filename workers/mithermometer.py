@@ -28,10 +28,30 @@ class MithermometerWorker(BaseWorker):
 
   def config_device(self, name, mac):
     ret = []
-    device={"identifiers": [mac, self.format_id(name, separator="_")], "manufacturer": "Xiaomi", "model": "LYWSD(CGQ/01ZM)", "name": self.format_topic(name, separator=" ").title()}
+    device = {
+      "identifiers": [mac, self.format_discovery_id(mac, name)],
+      "manufacturer": "Xiaomi",
+      "model": "LYWSD(CGQ/01ZM)",
+      "name": self.format_discovery_name(name)
+    }
+
     for attr in monitoredAttrs:
-      payload = {"unique_id": self.format_id(name, attr, separator="_"), "state_topic": self.format_topic(name, attr), "device_class": attr, "device": device}
-      ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_topic(name, attr, separator="_"), payload=payload))
+      payload = {
+        "unique_id": self.format_discovery_id(mac, name, attr),
+        "name": self.format_discovery_name(name, attr),
+        "state_topic": self.format_topic(name, attr),
+        "device_class": attr,
+        "device": device
+      }
+
+      if attr == 'temperature':
+        payload["unit_of_measurement"] = "°C"
+      elif attr == 'humidity':
+        payload["unit_of_measurement"] = "%"
+      elif attr == 'battery':
+        payload["unit_of_measurement"] = "%"
+
+      ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_discovery_topic(mac, name, attr), payload=payload))
 
     return ret
 

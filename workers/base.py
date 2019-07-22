@@ -8,11 +8,18 @@ class BaseWorker:
   def _setup(self):
     return
 
-  def format_id(self, *args, separator='/'):
-    return separator.join(["bt-mqtt-gateway", repr(self), *args])
+  def format_discovery_topic(self, node_id, *sensor_args):
+    object_id = '_'.join([repr(self), *sensor_args])
+    return '{}/{}'.format(node_id, object_id)
 
-  def format_topic(self, *args, separator='/'):
-    return separator.join([self.topic_prefix, *args])
+  def format_discovery_id(self, mac, *sensor_args):
+    return 'bt-mqtt-gateway/{}'.format(self.format_discovery_topic(mac, *sensor_args))
+
+  def format_discovery_name(self, *sensor_args):
+    return '_'.join([repr(self), *sensor_args])
+
+  def format_topic(self, *topic_args):
+    return '/'.join([self.topic_prefix, *topic_args])
 
   def __repr__(self):
     return self.__module__.split(".")[-1]
