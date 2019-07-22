@@ -8,7 +8,8 @@ class BaseWorker:
   def _setup(self):
     return
 
-  def format_discovery_topic(self, node_id, *sensor_args):
+  def format_discovery_topic(self, mac, *sensor_args):
+    node_id = mac.replace(':', '-')
     object_id = '_'.join([repr(self), *sensor_args])
     return '{}/{}'.format(node_id, object_id)
 
