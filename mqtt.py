@@ -63,6 +63,7 @@ class MqttClient:
   @property
   def ca_verify(self):
     if 'ca_verify' in self._config:
+      # Constrain config input to boolean value
       if self._config['ca_verify']:
         return True
       else:
