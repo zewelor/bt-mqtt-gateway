@@ -69,20 +69,29 @@ class ThermostatWorker(BaseWorker):
     from eq3bt import Thermostat
 
     _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
-    for name, mac in self.devices.items():
-      _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
-      self.devices[name] = {"mac": mac, "thermostat": Thermostat(mac)}
-
+    for name, obj in self.devices.items():
+      if isinstance(obj, str):
+        self.devices[name] = {"mac": obj, "thermostat": Thermostat(obj)}
+      elif isinstance(obj, dict):
+        self.devices[name] = {
+            "mac": obj["mac"],
+            "thermostat": Thermostat(obj["mac"]),
+            "discovery_temperature_topic": obj.get("discovery_temperature_topic"),
+            "discovery_temperature_template": obj.get("discovery_temperature_template")}
+      else:
+        raise TypeError("Unsupported configuration format")
+      _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, self.devices[name]["mac"])
     self._modes_mapper = self.ModesMapper()
 
   def config(self):
     ret = []
     for name, data in self.devices.items():
-      ret += self.config_device(name, data["mac"])
+      ret += self.config_device(name, data)
     return ret
 
-  def config_device(self, name, mac):
+  def config_device(self, name, data):
     ret = []
+    mac = data["mac"]
     device={"identifiers": [mac, self.format_discovery_id(mac, name)],
             "manufacturer": "eQ-3",
             "model": "Smart Radiator Thermostat",
@@ -104,6 +113,10 @@ class ThermostatWorker(BaseWorker):
                "payload_off": "off",
                "modes": [STATE_HEAT, STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF],
                "device": device}
+    if data.get("discovery_temperature_topic"):
+      payload["current_temperature_topic"] = data["discovery_temperature_topic"]
+    if data.get("discovery_temperature_template"):
+      payload["current_temperature_template"] = data["discovery_temperature_template"]
     ret.append(MqttConfigMessage(MqttConfigMessage.CLIMATE, self.format_discovery_topic(mac, name, SENSOR_CLIMATE), payload=payload))
 
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_WINDOW),
