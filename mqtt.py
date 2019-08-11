@@ -33,7 +33,10 @@ class MqttClient:
       return
 
     for m in messages:
-      topic = self._format_topic(m.topic)
+      if m.use_global_prefix:
+        topic = self._format_topic(m.topic)
+      else:
+        topic = m.topic
       self.mqttc.publish(topic, m.payload, retain=m.retain)
 
   @property
@@ -109,6 +112,8 @@ class MqttClient:
 
 
 class MqttMessage:
+  use_global_prefix = True
+
   def __init__(self, topic=None, payload=None, retain=False):
     self._topic = topic
     self._payload = payload
@@ -148,6 +153,8 @@ class MqttConfigMessage(MqttMessage):
   SENSOR = 'sensor'
   CLIMATE = 'climate'
   BINARY_SENSOR = 'binary_sensor'
+
+  use_global_prefix = False
 
   def __init__(self, component, name, payload=None, retain=False):
     super().__init__("{}/{}/config".format(component, name), json.dumps(payload), retain)

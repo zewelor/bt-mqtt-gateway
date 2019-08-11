@@ -17,13 +17,6 @@ REQUIREMENTS = ['bluepy']
 
 
 class IbbqWorker(BaseWorker):
-
-  def __init__(self, command_timeout, **args):
-    self.command_timeout = command_timeout
-    for arg, value in args.items():
-      setattr(self, arg, value)
-    self._setup()
-
   def _setup(self):
     _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
     for name, mac in self.devices.items():

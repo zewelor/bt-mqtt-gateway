@@ -38,9 +38,11 @@ logger.suppress_update_failures(parsed.suppress)
 
 _LOGGER.info('Starting')
 
+global_topic_prefix = settings['mqtt'].get('topic_prefix')
+
 mqtt = MqttClient(settings['mqtt'])
 manager = WorkersManager(settings['manager'])
-manager.register_workers().start(mqtt)
+manager.register_workers(global_topic_prefix).start(mqtt)
 
 running = True
 

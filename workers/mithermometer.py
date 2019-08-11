@@ -39,7 +39,7 @@ class MithermometerWorker(BaseWorker):
       payload = {
         "unique_id": self.format_discovery_id(mac, name, attr),
         "name": self.format_discovery_name(name, attr),
-        "state_topic": self.format_topic(name, attr),
+        "state_topic": self.format_prefixed_topic(name, attr),
         "device_class": attr,
         "device": device
       }

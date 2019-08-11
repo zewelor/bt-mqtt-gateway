@@ -1,7 +1,8 @@
 class BaseWorker:
-  def __init__(self, command_timeout, **args):
+  def __init__(self, command_timeout, global_topic_prefix, **kwargs):
     self.command_timeout = command_timeout
-    for arg, value in args.items():
+    self.global_topic_prefix = global_topic_prefix
+    for arg, value in kwargs.items():
       setattr(self, arg, value)
     self._setup()
 
@@ -21,6 +22,12 @@ class BaseWorker:
 
   def format_topic(self, *topic_args):
     return '/'.join([self.topic_prefix, *topic_args])
+
+  def format_prefixed_topic(self, *topic_args):
+    topic = self.format_topic(*topic_args)
+    if self.global_topic_prefix:
+      return '{}/{}'.format(self.global_topic_prefix, topic)
+    return topic
 
   def __repr__(self):
     return self.__module__.split(".")[-1]
