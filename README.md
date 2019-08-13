@@ -58,7 +58,7 @@ This file needs to be created first:
 cp config.yaml.example config.yaml
 vim config.yaml
 source .venv/bin/activate
-./gateway.py
+sudo ./gateway.py
 ```
 
 **Attention:**
@@ -75,13 +75,13 @@ A test run is as easy as:
 
 ```shell
 source .venv/bin/activate
-./gateway.py
+sudo ./gateway.py
 ```
 
 Debug output can be displayed using the `-d` argument:
 
 ```shell
-./gateway.py -d
+sudo ./gateway.py -d
 ```
 
 ## Deployment
