@@ -45,7 +45,7 @@ class WorkersManager:
     self._config = config
     self._command_timeout = config.get('command_timeout', 35)
 
-  def register_workers(self):
+  def register_workers(self, global_topic_prefix):
     for (worker_name, worker_config) in self._config['workers'].items():
       module_obj = importlib.import_module("workers.%s" % worker_name)
       klass = getattr(module_obj, "%sWorker" % worker_name.title())
@@ -54,7 +54,7 @@ class WorkersManager:
         self._pip_install_helper(module_obj.REQUIREMENTS)
 
       command_timeout = worker_config.get('command_timeout', self._command_timeout)
-      worker_obj = klass(command_timeout, **worker_config['args'])
+      worker_obj = klass(command_timeout, global_topic_prefix, **worker_config['args'])
 
       if 'sensor_config' in self._config and hasattr(worker_obj, 'config'):
         _LOGGER.debug("Added %s config with a %d seconds timeout", repr(worker_obj), 2)

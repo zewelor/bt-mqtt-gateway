@@ -100,12 +100,12 @@ class ThermostatWorker(BaseWorker):
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_CLIMATE),
                "name": self.format_discovery_name(name, SENSOR_CLIMATE),
                "qos": 1,
-               "temperature_state_topic": self.format_topic(name, SENSOR_TARGET_TEMPERATURE),
-               "temperature_command_topic": self.format_topic(name, SENSOR_TARGET_TEMPERATURE, 'set'),
-               "mode_state_topic": self.format_topic(name, 'mode'),
-               "mode_command_topic": self.format_topic(name, 'mode', 'set'),
-               "away_mode_state_topic": self.format_topic(name, 'away'),
-               "away_mode_command_topic": self.format_topic(name, 'away', 'set'),
+               "temperature_state_topic": self.format_prefixed_topic(name, SENSOR_TARGET_TEMPERATURE),
+               "temperature_command_topic": self.format_prefixed_topic(name, SENSOR_TARGET_TEMPERATURE, 'set'),
+               "mode_state_topic": self.format_prefixed_topic(name, 'mode'),
+               "mode_command_topic": self.format_prefixed_topic(name, 'mode', 'set'),
+               "away_mode_state_topic": self.format_prefixed_topic(name, 'away'),
+               "away_mode_command_topic": self.format_prefixed_topic(name, 'away', 'set'),
                "min_temp": 5.0,
                "max_temp": 29.5,
                "temp_step": 0.5,
@@ -121,7 +121,7 @@ class ThermostatWorker(BaseWorker):
 
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_WINDOW),
                "name": self.format_discovery_name(name, SENSOR_WINDOW),
-               "state_topic": self.format_topic(name, SENSOR_WINDOW),
+               "state_topic": self.format_prefixed_topic(name, SENSOR_WINDOW),
                "device_class": 'window',
                "payload_on": "True",
                "payload_off": "False",
@@ -130,7 +130,7 @@ class ThermostatWorker(BaseWorker):
 
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_BATTERY),
                "name": self.format_discovery_name(name, SENSOR_BATTERY),
-               "state_topic": self.format_topic(name, SENSOR_BATTERY),
+               "state_topic": self.format_prefixed_topic(name, SENSOR_BATTERY),
                "device_class": 'battery',
                "payload_on": "True",
                "payload_off": "False",
@@ -139,7 +139,7 @@ class ThermostatWorker(BaseWorker):
 
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_LOCKED),
                "name": self.format_discovery_name(name, SENSOR_LOCKED),
-               "state_topic": self.format_topic(name, SENSOR_LOCKED),
+               "state_topic": self.format_prefixed_topic(name, SENSOR_LOCKED),
                "device_class": 'lock',
                "payload_on": "False",
                "payload_off": "True",
@@ -149,7 +149,7 @@ class ThermostatWorker(BaseWorker):
 
     payload = {"unique_id": self.format_discovery_id(mac, name, SENSOR_VALVE),
                "name": self.format_discovery_name(name, SENSOR_VALVE),
-               "state_topic": self.format_topic(name, SENSOR_VALVE),
+               "state_topic": self.format_prefixed_topic(name, SENSOR_VALVE),
                "unit_of_measurement": "%",
                "device": device}
     ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR, self.format_discovery_topic(mac, name, SENSOR_VALVE), payload=payload))
