@@ -5,25 +5,12 @@ import logger
 
 
 REQUIREMENTS = ['python-smartgadget']
-ATTR_NAMES = [
-  ('temperature', 'temperature'),
-  ('humidity', 'humidity'),
-  ('battery_level', 'battery'),
+ATTR_CONFIG = [
+  # (attribute_name, device_class, unit_of_measurement)
+  ('temperature', 'temperature', '°C'),
+  ('humidity', 'humidity', '%'),
+  ('battery_level', 'battery', '%'),
 ]
-ATTR_CONFIG_MAP = {
-  'temperature': {
-    'device_class': 'temperature',
-    'unit_of_measurement': '°C',
-  },
-  'humidity': {
-    'device_class': 'humidity',
-    'unit_of_measurement': '%',
-  },
-  'battery_level': {
-    'device_class': 'battery',
-    'unit_of_measurement': '%',
-  }
-}
 _LOGGER = logger.get(__name__)
 
 
@@ -51,17 +38,17 @@ class SmartgadgetWorker(BaseWorker):
       'name': self.format_discovery_name(name),
     }
 
-    for attr, config_name in ATTR_NAMES:
-      attr_config = ATTR_CONFIG_MAP[attr]
+    for attr, device_class, unit in ATTR_CONFIG:
       payload = {
-        'unique_id': self.format_discovery_id(mac, name, config_name),
-        'name': self.format_discovery_name(name, config_name),
-        'state_topic': self.format_prefixed_topic(name, config_name),
+        'unique_id': self.format_discovery_id(mac, name, device_class),
+        'name': self.format_discovery_name(name, device_class),
+        'state_topic': self.format_prefixed_topic(name, device_class),
         'device': device,
+        'device_class': device_class,
+        'unit_of_measurement': unit,
       }
-      payload.update(attr_config)
       ret.append(MqttConfigMessage(MqttConfigMessage.SENSOR,
-                                   self.format_discovery_topic(mac, name, config_name),
+                                   self.format_discovery_topic(mac, name, device_class),
                                    payload=payload))
 
     return ret
@@ -83,8 +70,8 @@ class SmartgadgetWorker(BaseWorker):
     values = device.get_values()
 
     ret = []
-    for attr, config_name in ATTR_NAMES:
-      ret.append(MqttMessage(topic=self.format_topic(name, config_name), payload=values[attr]))
+    for attr, device_class, _ in ATTR_CONFIG:
+      ret.append(MqttMessage(topic=self.format_topic(name, device_class), payload=values[attr]))
 
     return ret
 
