@@ -1,4 +1,5 @@
 config.yaml
 __pycache__/
 .idea/
+.venv
 .vscode/

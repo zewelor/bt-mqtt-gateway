@@ -40,10 +40,12 @@ On a modern Linux system, just a few steps are needed to get the gateway working
 The following example shows the installation under Debian/Raspbian:
 
 ```shell
-sudo apt-get install git python3 python3-pip python3-wheel bluetooth bluez libglib2.0-dev
+sudo apt-get install git python3 python3-virtualenv python3-pip python3-wheel bluetooth bluez libglib2.0-dev
 git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
-sudo pip3 install -r requirements.txt
+virtualenv -p python3 .venv
+source .venv/bin/activate
+pip3 install -r requirements.txt
 ```
 
 ## Configuration
@@ -55,7 +57,8 @@ This file needs to be created first:
 ```shell
 cp config.yaml.example config.yaml
 vim config.yaml
-./gateway.py
+source .venv/bin/activate
+sudo ./gateway.py
 ```
 
 **Attention:**
@@ -71,6 +74,7 @@ sudo hcitool lescan
 A test run is as easy as:
 
 ```shell
+source .venv/bin/activate
 sudo ./gateway.py
 ```
 
@@ -94,7 +98,7 @@ sudo systemctl enable bt-mqtt-gateway
 ```
 
 **Attention:**
-You need to define the absolute path of `gateway.py` in `bt-mqtt-gateway.service`.
+You need to define the absolute path of `service.sh` in `bt-mqtt-gateway.service`.
 
 **Testing mqtt:**
 Use mosquitto_sub to print all messages
