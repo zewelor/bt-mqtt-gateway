@@ -164,10 +164,13 @@ class ThermostatWorker(BaseWorker):
     _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
     for name, data in self.devices.items():
       _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
+      thermostat = data['thermostat']
       try:
-        ret += self.update_device_state(name, data["thermostat"])
+        thermostat.update()
       except btle.BTLEException as e:
         logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
+      else:
+        ret.extend(self.update_device_state(name, thermostat))
     return ret
 
   def on_command(self, topic, value):
@@ -176,6 +179,7 @@ class ThermostatWorker(BaseWorker):
     device_name, method, _ = topic_without_prefix.split('/')
 
     data = self.devices[device_name]
+    thermostat = data['thermostat']
 
     value = value.decode('utf-8')
 
@@ -191,20 +195,14 @@ class ThermostatWorker(BaseWorker):
 
     _LOGGER.info("Setting %s to %s on %s device '%s' (%s)", method, value, repr(self), device_name, data["mac"])
     try:
-      setattr(data["thermostat"], method, value)
+      setattr(thermostat, method, value)
     except btle.BTLEException as e:
       logger.log_exception(_LOGGER, "Error setting %s to %s on %s device '%s' (%s): %s", method, value, repr(self), device_name, data["mac"], type(e).__name__)
       return []
 
-    try:
-      return self.update_device_state(device_name, data["thermostat"])
-    except btle.BTLEException as e:
-      logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), device_name, data["mac"], type(e).__name__, suppress=True)
-      return []
+    return self.update_device_state(device_name, thermostat)
 
   def update_device_state(self, name, thermostat):
-    thermostat.update()
-
     ret = []
     for attr in monitoredAttrs:
       ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=getattr(thermostat, attr)))
