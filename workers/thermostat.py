@@ -170,7 +170,7 @@ class ThermostatWorker(BaseWorker):
       except btle.BTLEException as e:
         logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
       else:
-        ret.extend(self.update_device_state(name, thermostat))
+        ret.extend(self.present_device_state(name, thermostat))
     return ret
 
   def on_command(self, topic, value):
@@ -200,9 +200,9 @@ class ThermostatWorker(BaseWorker):
       logger.log_exception(_LOGGER, "Error setting %s to %s on %s device '%s' (%s): %s", method, value, repr(self), device_name, data["mac"], type(e).__name__)
       return []
 
-    return self.update_device_state(device_name, thermostat)
+    return self.present_device_state(device_name, thermostat)
 
-  def update_device_state(self, name, thermostat):
+  def present_device_state(self, name, thermostat):
     ret = []
     for attr in monitoredAttrs:
       ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=getattr(thermostat, attr)))
