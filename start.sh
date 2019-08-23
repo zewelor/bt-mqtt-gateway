@@ -1,4 +1,4 @@
- #!/bin/sh
+#!/bin/sh
 
 if ! [ -f '/config/config.yaml' ]; then
     echo "There is no config.yaml! An example is created."
