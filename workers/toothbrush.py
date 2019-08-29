@@ -46,4 +46,4 @@ class ToothbrushWorker(BaseWorker):
         ret.append(MqttMessage(topic=self.format_topic(name+'/mode'), payload=bytes_[9] ))
         ret.append(MqttMessage(topic=self.format_topic(name+'/quadrant'), payload=bytes_[10] ))
 
-    return ret 
+      yield ret

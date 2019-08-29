@@ -160,7 +160,6 @@ class ThermostatWorker(BaseWorker):
   def status_update(self):
     from bluepy import btle
 
-    ret = []
     _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
     for name, data in self.devices.items():
       _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
@@ -170,8 +169,7 @@ class ThermostatWorker(BaseWorker):
       except btle.BTLEException as e:
         logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
       else:
-        ret.extend(self.present_device_state(name, thermostat))
-    return ret
+        yield self.present_device_state(name, thermostat)
 
   def on_command(self, topic, value):
     from bluepy import btle

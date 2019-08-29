@@ -1,4 +1,5 @@
 import importlib
+import inspect
 import threading
 from functools import partial
 import logging
@@ -31,7 +32,11 @@ class WorkersManager:
     def execute(self):
       messages = []
       with timeout(self._timeout, exception=TimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
-        messages = self._callback(*self._args)
+        if inspect.isgeneratorfunction(self._callback):
+          for message in self._callback(*self._args):
+            messages += message
+        else:
+          messages = self._callback(*self._args)
 
       _LOGGER.debug('Execution result of command %s: %s', self._source, messages)
       return messages

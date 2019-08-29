@@ -19,8 +19,8 @@ class SwitchbotWorker(BaseWorker):
     _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
     for name, mac in self.devices.items():
       _LOGGER.info("Adding %s device '%s' (%s)", repr(self), name, mac)
-      self.devices[name] = {"bot":None,"state":STATE_OFF,"mac":mac} 
-     
+      self.devices[name] = {"bot":None,"state":STATE_OFF,"mac":mac}
+
   def format_state_topic(self, *args):
     return '/'.join([self.state_topic_prefix, *args])
 
@@ -48,7 +48,7 @@ class SwitchbotWorker(BaseWorker):
     value = value.decode('utf-8')
 
     # It needs to be on separate if because first if can change method
-   
+
     _LOGGER.debug("Setting %s on %s device '%s' (%s)", value, repr(self), device_name, bot["mac"])
     try:
             bot["bot"] = Peripheral(bot["mac"],"random")
@@ -72,9 +72,7 @@ class SwitchbotWorker(BaseWorker):
       return []
 
   def update_device_state(self, name, value):
-    ret = []
-    ret.append(MqttMessage(topic=self.format_state_topic(name), payload=value))
-    return ret
+    return [MqttMessage(topic=self.format_state_topic(name), payload=value)]
 
   def device_for(self, mac):
     for key in self.devices:
