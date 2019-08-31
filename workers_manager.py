@@ -19,7 +19,7 @@ else:
 
 _LOGGER = logger.get(__name__)
 
-DEFAULT_COMMAND_TIMEOUT = 3
+DEFAULT_COMMAND_TIMEOUT = 35
 
 class WorkersManager:
   class Command:
