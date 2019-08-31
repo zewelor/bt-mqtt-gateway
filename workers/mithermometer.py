@@ -1,6 +1,7 @@
 import logging
 
 from mqtt import MqttMessage, MqttConfigMessage
+from interruptingcow import timeout
 
 from workers.base import BaseWorker
 import logger
@@ -9,6 +10,7 @@ REQUIREMENTS = ['mithermometer', 'bluepy']
 monitoredAttrs = ["temperature", "humidity", "battery"]
 _LOGGER = logger.get(__name__)
 
+PER_DEVICE_TIMEOUT = 6 # In seconds
 
 class MithermometerWorker(BaseWorker):
   def _setup(self):
@@ -68,6 +70,7 @@ class MithermometerWorker(BaseWorker):
       except TimeoutError as e:
         logger.log_exception(_LOGGER, "Time out during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
 
+  @timeout(PER_DEVICE_TIMEOUT, TimeoutError)
   def update_device_state(self, name, poller):
     ret = []
     poller.clear_cache()

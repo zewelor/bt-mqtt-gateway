@@ -1,5 +1,6 @@
 from mqtt import MqttMessage, MqttConfigMessage
 
+from interruptingcow import timeout
 from workers.base import BaseWorker
 import logger
 
@@ -7,6 +8,7 @@ REQUIREMENTS = ['miflora', 'bluepy']
 monitoredAttrs = ["temperature", "moisture", "light", "conductivity", "battery"]
 _LOGGER = logger.get(__name__)
 
+PER_DEVICE_TIMEOUT = 6 # In seconds
 
 class MifloraWorker(BaseWorker):
   def _setup(self):
@@ -82,7 +84,10 @@ class MifloraWorker(BaseWorker):
         yield self.update_device_state(name, data["poller"])
       except BluetoothBackendException as e:
         logger.log_exception(_LOGGER, "Error during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
+      except TimeoutError as e:
+          logger.log_exception(_LOGGER, "Time out during update of %s device '%s' (%s): %s", repr(self), name, data["mac"], type(e).__name__, suppress=True)
 
+  @timeout(PER_DEVICE_TIMEOUT, TimeoutError)
   def update_device_state(self, name, poller):
     ret = []
     poller.clear_cache()
