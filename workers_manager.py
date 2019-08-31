@@ -42,7 +42,7 @@ class WorkersManager:
             messages = self._callback(*self._args)
       except TimeoutError as e:
           if messages:
-            logger.log_exception(_LOGGER, str(e) if str(e) else 'Timeout while executing worker command, sending got only partial update', suppress=True)
+            _LOGGER.warn(f"{str(e)}, sending only partial update")
           else:
             raise e
 
