@@ -37,6 +37,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ## Installation
 
+### Virtualenv
 On a modern Linux system, just a few steps are needed to get the gateway working.
 The following example shows the installation under Debian/Raspbian:
 
@@ -48,6 +49,10 @@ virtualenv -p python3 .venv
 source .venv/bin/activate
 pip3 install -r requirements.txt
 ```
+
+### Docker
+There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
+Thanks @hobbypunk90 and @krasnoukhov for docker work.
 
 ## Configuration
 
