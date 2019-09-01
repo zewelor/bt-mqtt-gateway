@@ -2,12 +2,13 @@ import importlib
 import inspect
 import threading
 from functools import partial
-import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
 from pytz import utc
 
+from const import DEFAULT_COMMAND_TIMEOUT
+from exceptions import WorkerTimeoutError
 from workers_queue import _WORKERS_QUEUE
 import logger
 
@@ -18,8 +19,6 @@ else:
   from pip import main as pip_main
 
 _LOGGER = logger.get(__name__)
-
-DEFAULT_COMMAND_TIMEOUT = 35
 
 class WorkersManager:
   class Command:
@@ -34,17 +33,17 @@ class WorkersManager:
       messages = []
 
       try:
-        with timeout(self._timeout, exception=TimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
+        with timeout(self._timeout, exception=WorkerTimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
           if inspect.isgeneratorfunction(self._callback):
             for message in self._callback(*self._args):
               messages += message
           else:
             messages = self._callback(*self._args)
-      except TimeoutError as e:
-          if messages:
-            _LOGGER.warn(f"{str(e)}, sending only partial update")
-          else:
-            raise e
+      except WorkerTimeoutError as e:
+        if messages:
+          logger.log_exception(_LOGGER, "%s, sending only partial update", e, suppress=True)
+        else:
+          raise e
 
       _LOGGER.debug('Execution result of command %s: %s', self._source, messages)
       return messages
