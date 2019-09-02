@@ -1,5 +1,4 @@
-
-true_statement = ('y', 'yes', 'on', '1', 'true', 't', )
+true_statement = ("y", "yes", "on", "1", "true", "t")
 
 
 def booleanize(value) -> bool:
