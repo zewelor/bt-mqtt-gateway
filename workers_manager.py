@@ -1,12 +1,14 @@
 import importlib
+import inspect
 import threading
 from functools import partial
-import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
 from pytz import utc
 
+from const import DEFAULT_COMMAND_TIMEOUT
+from exceptions import WorkerTimeoutError
 from workers_queue import _WORKERS_QUEUE
 import logger
 
@@ -17,7 +19,6 @@ else:
   from pip import main as pip_main
 
 _LOGGER = logger.get(__name__)
-
 
 class WorkersManager:
   class Command:
@@ -30,8 +31,19 @@ class WorkersManager:
 
     def execute(self):
       messages = []
-      with timeout(self._timeout, exception=TimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
-        messages = self._callback(*self._args)
+
+      try:
+        with timeout(self._timeout, exception=WorkerTimeoutError('Execution of command {} timed out after {} seconds'.format(self._source, self._timeout))):
+          if inspect.isgeneratorfunction(self._callback):
+            for message in self._callback(*self._args):
+              messages += message
+          else:
+            messages = self._callback(*self._args)
+      except WorkerTimeoutError as e:
+        if messages:
+          logger.log_exception(_LOGGER, "%s, sending only partial update", e, suppress=True)
+        else:
+          raise e
 
       _LOGGER.debug('Execution result of command %s: %s', self._source, messages)
       return messages
@@ -43,7 +55,7 @@ class WorkersManager:
     self._scheduler = BackgroundScheduler(timezone=utc)
     self._daemons = []
     self._config = config
-    self._command_timeout = config.get('command_timeout', 35)
+    self._command_timeout = config.get('command_timeout', DEFAULT_COMMAND_TIMEOUT)
 
   def register_workers(self, global_topic_prefix):
     for (worker_name, worker_config) in self._config['workers'].items():

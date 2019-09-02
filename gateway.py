@@ -2,6 +2,8 @@
 
 import sys
 
+from exceptions import WorkerTimeoutError
+
 if sys.version_info < (3, 5):
   print("To use this script you need python 3.5 or newer! got %s" % sys.version_info)
   sys.exit(1)
@@ -51,7 +53,7 @@ while running:
     mqtt.publish(_WORKERS_QUEUE.get(timeout=10).execute())
   except queue.Empty: # Allow for SIGINT processing
     pass
-  except TimeoutError as e:
+  except WorkerTimeoutError as e:
     logger.log_exception(_LOGGER, str(e) if str(e) else 'Timeout while executing worker command', suppress=True)
   except (KeyboardInterrupt, SystemExit):
     running = False

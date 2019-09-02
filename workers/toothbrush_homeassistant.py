@@ -145,4 +145,4 @@ class Toothbrush_HomeassistantWorker(BaseWorker):
       if autoconf_data != False:
         ret.append(MqttMessage(topic=self.autodiscovery_prefix+"/sensor/"+self.topic_prefix+"_"+key+"/config", payload=json.dumps(autoconf_data), retain=True))
 
-    return ret
+      yield ret
