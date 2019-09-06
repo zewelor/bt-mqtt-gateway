@@ -1,6 +1,6 @@
 class WorkerTimeoutError(Exception):
-  pass
+    pass
 
 
 class DeviceTimeoutError(Exception):
-  pass
+    pass
