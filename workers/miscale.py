@@ -1,6 +1,7 @@
 import time
 from interruptingcow import timeout
 
+from exceptions import DeviceTimeoutError
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
@@ -31,7 +32,7 @@ class MiscaleWorker(BaseWorker):
 
         with timeout(
             self.SCAN_TIMEOUT,
-            exception=TimeoutError(
+            exception=DeviceTimeoutError(
                 "Retrieving the weight from {} device {} timed out after {} seconds".format(
                     repr(self), self.mac, self.SCAN_TIMEOUT
                 )

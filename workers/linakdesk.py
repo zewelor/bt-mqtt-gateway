@@ -1,5 +1,6 @@
 from interruptingcow import timeout
 
+from exceptions import DeviceTimeoutError
 from mqtt import MqttMessage
 from workers.base import BaseWorker
 
@@ -27,7 +28,7 @@ class LinakdeskWorker(BaseWorker):
     def _get_height(self):
         with timeout(
             self.SCAN_TIMEOUT,
-            exception=TimeoutError(
+            exception=DeviceTimeoutError(
                 "Retrieving the height from {} device {} timed out after {} seconds".format(
                     repr(self), self.mac, self.SCAN_TIMEOUT
                 )
