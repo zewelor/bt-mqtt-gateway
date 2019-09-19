@@ -106,8 +106,10 @@ class BlescanmultiWorker(BaseWorker):
         self.last_status = [
             BleDeviceStatus(self, mac, name) for name, mac in self.devices.items()
         ]
+        _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
 
     def status_update(self):
+        _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
         devices = self.scanner.scan(
             float(self.scan_timeout), passive=booleanize(self.scan_passive)
         )
