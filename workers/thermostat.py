@@ -134,7 +134,7 @@ class ThermostatWorker(BaseWorker):
             "temp_step": 0.5,
             "payload_on": "on",
             "payload_off": "off",
-            "modes": [STATE_HEAT, STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF],
+            "modes": [STATE_HEAT, STATE_AUTO, STATE_OFF],
             "device": device,
         }
         if data.get("discovery_temperature_topic"):
