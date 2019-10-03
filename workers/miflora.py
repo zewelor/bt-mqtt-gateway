@@ -7,7 +7,11 @@ from workers.base import BaseWorker
 import logger
 
 REQUIREMENTS = ["miflora", "bluepy"]
-monitoredAttrs = ["temperature", "moisture", "light", "conductivity", "battery"]
+
+ATTR_BATTERY = "battery"
+ATTR_LOW_BATTERY = 'low_battery'
+
+monitoredAttrs = ["temperature", "moisture", "light", "conductivity", ATTR_BATTERY]
 _LOGGER = logger.get(__name__)
 
 
@@ -63,7 +67,7 @@ class MifloraWorker(BaseWorker):
                 payload.update(
                     {"device_class": "temperature", "unit_of_measurement": "°C"}
                 )
-            elif attr == "battery":
+            elif attr == ATTR_BATTERY:
                 payload.update({"device_class": "battery", "unit_of_measurement": "%"})
 
             ret.append(
@@ -73,6 +77,20 @@ class MifloraWorker(BaseWorker):
                     payload=payload,
                 )
             )
+
+        ret.append(
+            MqttConfigMessage(
+                MqttConfigMessage.BINARY_SENSOR,
+                self.format_discovery_topic(mac, name, ATTR_LOW_BATTERY),
+                payload={
+                    "unique_id": self.format_discovery_id(mac, name, ATTR_LOW_BATTERY),
+                    "state_topic": self.format_prefixed_topic(name, ATTR_LOW_BATTERY),
+                    "name": self.format_discovery_name(name, ATTR_LOW_BATTERY),
+                    "device": device,
+                    "device_class": "battery",
+                },
+            )
+        )
 
         return ret
 
@@ -118,4 +136,13 @@ class MifloraWorker(BaseWorker):
                     payload=poller.parameter_value(attr),
                 )
             )
+
+        # Low battery binary sensor
+        ret.append(
+            MqttMessage(
+                topic=self.format_topic(name, ATTR_LOW_BATTERY),
+                payload=self.true_false_to_ha_on_off(poller.parameter_value(ATTR_BATTERY) < 10),
+            )
+        )
+
         return ret

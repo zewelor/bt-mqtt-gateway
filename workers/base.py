@@ -33,3 +33,12 @@ class BaseWorker:
 
     def __repr__(self):
         return self.__module__.split(".")[-1]
+
+    @staticmethod
+    def true_false_to_ha_on_off(true_false):
+        if true_false:
+            return 'ON'
+
+        return 'OFF'
+
+
