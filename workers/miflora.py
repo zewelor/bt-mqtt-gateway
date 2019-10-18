@@ -6,7 +6,7 @@ from interruptingcow import timeout
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ["miflora", "bluepy"]
+REQUIREMENTS = ["btlewrap==0.0.4", "miflora==0.0.5", "bluepy"]
 
 ATTR_BATTERY = "battery"
 ATTR_LOW_BATTERY = 'low_battery'
