@@ -2,6 +2,7 @@ import importlib
 import inspect
 import threading
 from functools import partial
+from distutils.version import LooseVersion
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
@@ -13,9 +14,11 @@ from workers_queue import _WORKERS_QUEUE
 import logger
 
 from pip import __version__ as pip_version
-
-if int(pip_version.split(".")[0]) >= 10:
-    from pip._internal import main as pip_main
+if LooseVersion(pip_version) >= LooseVersion("10"):
+    if LooseVersion(pip_version) >= LooseVersion("19.3.1"):
+        from pip._internal.main import main as pip_main
+    else:
+        from pip._internal import main as pip_main
 else:
     from pip import main as pip_main
 
