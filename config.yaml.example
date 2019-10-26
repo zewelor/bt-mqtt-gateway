@@ -104,3 +104,10 @@ manager:
           living_room: 00:11:22:33:44:55
         topic_prefix: smartgadget
       update_interval: 300
+    ruuvitag:
+      args:
+        devices:
+          basement: 00:11:22:33:44:55
+        topic_prefix: ruuvitag
+      update_interval: 60
+
