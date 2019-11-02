@@ -10,11 +10,11 @@ REQUIREMENTS = ["ruuvitag_sensor"]
 # See https://github.com/ruuvi/ruuvi-sensor-protocols for the sensor protocols.
 ATTR_CONFIG = [
     # (attribute_name, device_class, unit_of_measurement)
-    ("acceleration", "acceleration", ""),
-    ("acceleration_x", "acceleration_x", ""),
-    ("acceleration_y", "acceleration_y", ""),
-    ("acceleration_z", "acceleration_z", ""),
-    ("battery", "battery", "%"),
+    ("acceleration", "acceleration", "mG"),
+    ("acceleration_x", "acceleration_x", "mG"),
+    ("acceleration_y", "acceleration_y", "mG"),
+    ("acceleration_z", "acceleration_z", "mG"),
+    ("battery", "battery", "mV"),
     ("data_format", "data_format", ""),
     ("humidity", "humidity", "%"),
     ("identifier", "identifier", ""),
