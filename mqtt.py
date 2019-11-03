@@ -59,11 +59,11 @@ class MqttClient:
 
     @property
     def username(self):
-        return self._config["username"] if "username" in self._config else None
+        return str(self._config["username"]) if "username" in self._config else None
 
     @property
     def password(self):
-        return self._config["password"] if "password" in self._config else None
+        return str(self._config["password"]) if "password" in self._config else None
 
     @property
     def ca_cert(self):
