@@ -25,6 +25,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * [Oral-B connected toothbrushes](https://oralb.com/en-us/products#viewtype:gridview/facets:feature=feature-bluetooth-connectivity/category:products/page:0/sortby:Featured-Sort/productsdisplayed:undefined/promotilesenabled:undefined/cwidth:3/pscroll:)
 * [Switchbot](https://www.switch-bot.com/)
 * [Sensirion SmartGadget](https://www.sensirion.com/en/environmental-sensors/humidity-sensors/development-kit/) via [python-smartgadget](https://github.com/merll/python-smartgadget)
+* [RuuviTag](https://ruuvi.com/ruuvitag-specs/) via [ruuvitag-sensor](https://github.com/ttu/ruuvitag-sensor)
 
 ## Getting Started
 
