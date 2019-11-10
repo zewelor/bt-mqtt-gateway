@@ -26,6 +26,7 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 * [Switchbot](https://www.switch-bot.com/)
 * [Sensirion SmartGadget](https://www.sensirion.com/en/environmental-sensors/humidity-sensors/development-kit/) via [python-smartgadget](https://github.com/merll/python-smartgadget)
 * [RuuviTag](https://ruuvi.com/ruuvitag-specs/) via [ruuvitag-sensor](https://github.com/ttu/ruuvitag-sensor)
+* Xiaomi Mijia 2nd gen, aka LYWSD02
 
 ## Getting Started
 

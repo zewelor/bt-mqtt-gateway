@@ -110,4 +110,9 @@ manager:
           basement: 00:11:22:33:44:55
         topic_prefix: ruuvitag
       update_interval: 60
-
+    lywsd02:
+      args:
+        devices:
+          living_room:  00:11:22:33:44:55
+        topic_prefix: mijasensor
+      update_interval: 120
