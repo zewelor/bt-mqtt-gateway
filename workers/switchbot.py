@@ -108,8 +108,3 @@ class SwitchbotWorker(BaseWorker):
 
     def update_device_state(self, name, value):
         return [MqttMessage(topic=self.format_state_topic(name), payload=value)]
-
-    def device_for(self, mac):
-        for key in self.devices:
-            if key.addr == mac:
-                return key
