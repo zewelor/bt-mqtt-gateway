@@ -90,8 +90,3 @@ class SmartgadgetWorker(BaseWorker):
             )
 
         return ret
-
-    def device_for(self, mac):
-        from sensirionbt import SmartGadget
-
-        return SmartGadget(mac)
