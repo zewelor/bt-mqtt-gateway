@@ -26,7 +26,7 @@ RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-li
     ln -s /config/config.yaml ./config.yaml && \
     apk del --no-cache bluez-dev musl-dev gcc make git glib-dev linux-headers grep python2
 
-RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-libs musl-dev linux-headers gcc grep && \
+RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-libs bluez-deprecated musl-dev linux-headers gcc grep sudo && \
     grep -P "(?<=REQUIREMENTS).*" workers/*.py | grep -Po "(?<=\[).*(?=\])" | tr ',' '\n' | tr "'" " "| tr "\"" " " > /tmp/requirements.txt && \
     cat /tmp/requirements.txt && \
     pip install -r /tmp/requirements.txt && \

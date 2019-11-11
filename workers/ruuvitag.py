@@ -108,8 +108,3 @@ class RuuvitagWorker(BaseWorker):
                 pass
 
         return ret
-
-    def device_for(self, mac):
-        from ruuvitag_sensor.ruuvitag import RuuviTag
-
-        return RuuviTag(mac)
