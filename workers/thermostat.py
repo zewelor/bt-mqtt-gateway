@@ -307,6 +307,3 @@ class ThermostatWorker(BaseWorker):
         )
 
         return ret
-
-    def device_for(self, mac):
-        return eq3bt.Thermostat(mac)
