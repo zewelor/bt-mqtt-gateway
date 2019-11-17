@@ -25,6 +25,10 @@ ATTR_CONFIG = [
     ("temperature", "temperature", "°C"),
     ("tx_power", "signal_strength", "dBm"),
 ]
+ATTR_LOW_BATTERY = "low_battery"
+# "[Y]ou should plan to replace the battery when the voltage drops below 2.5 volts"
+# Source: https://github.com/ruuvi/ruuvitag_fw/wiki/FAQ:-battery
+LOW_BATTERY_VOLTAGE = 2500
 _LOGGER = logger.get(__name__)
 
 
@@ -69,6 +73,21 @@ class RuuvitagWorker(BaseWorker):
                 )
             )
 
+        # Add low battery config
+        ret.append(
+            MqttConfigMessage(
+                MqttConfigMessage.BINARY_SENSOR,
+                self.format_discovery_topic(mac, name, ATTR_LOW_BATTERY),
+                payload={
+                    "unique_id": self.format_discovery_id(mac, name, ATTR_LOW_BATTERY),
+                    "name": self.format_discovery_name(name, ATTR_LOW_BATTERY),
+                    "state_topic": self.format_prefixed_topic(name, ATTR_LOW_BATTERY),
+                    "device": device,
+                    "device_class": "battery",
+                },
+            )
+        )
+
         return ret
 
     def status_update(self):
@@ -100,11 +119,27 @@ class RuuvitagWorker(BaseWorker):
             try:
                 ret.append(
                     MqttMessage(
-                        topic=self.format_topic(name, device_class), payload=values[attr]
+                        topic=self.format_topic(name, device_class),
+                        payload=values[attr],
                     )
                 )
             except KeyError:
                 # The data format of this sensor doesn't have this attribute, so ignore it.
                 pass
+
+        # Low battery binary sensor
+        #
+        try:
+            ret.append(
+                MqttMessage(
+                    topic=self.format_topic(name, ATTR_LOW_BATTERY),
+                    payload=self.true_false_to_ha_on_off(
+                        values["battery"] < LOW_BATTERY_VOLTAGE
+                    ),
+                )
+            )
+        except KeyError:
+            # The data format of this sensor doesn't have the battery attribute, so ignore it.
+            pass
 
         return ret
