@@ -8,6 +8,26 @@ REQUIREMENTS = ["ruuvitag_sensor"]
 
 # Supports all attributes of Data Format 2, 3, 4 and 5 of the RuuviTag.
 # See https://github.com/ruuvi/ruuvi-sensor-protocols for the sensor protocols.
+# Available attributes:
+# +-----------------------------+---+---+---+---+
+# | Attribute / Data Format     | 2 | 3 | 4 | 5 |
+# +-----------------------------+---+---+---+---+
+# | acceleration                |   | X |   | X |
+# | acceleration_x              |   | X |   | X |
+# | acceleration_y              |   | X |   | X |
+# | acceleration_z              |   | X |   | X |
+# | battery                     |   | X |   | X |
+# | data_format                 | X | X | X | X |
+# | humidity                    | X | X | X | X |
+# | identifier                  |   |   | X |   |
+# | low_battery                 |   | X |   | X |
+# | mac                         |   |   |   | X |
+# | measurement_sequence_number |   |   |   | X |
+# | movement_counter            |   |   |   | X |
+# | pressure                    | X | X | X | X |
+# | temperature                 | X | X | X | X |
+# | tx_power                    |   |   |   | X |
+# +-----------------------------+---+---+---+---+
 ATTR_CONFIG = [
     # (attribute_name, device_class, unit_of_measurement)
     ("acceleration", "acceleration", "mG"),
