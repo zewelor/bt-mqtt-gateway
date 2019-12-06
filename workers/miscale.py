@@ -19,11 +19,11 @@ class MiscaleWorker(BaseWorker):
     def status_update(self):
         return [
             MqttMessage(
-                topic=self.format_topic("weight/kg"), payload=self._get_weight()
+                topic=self.format_topic("weight/kg"), payload=self._get_data()
             )
         ]
 
-    def _get_weight(self):
+    def _get_data(self):
         from bluepy import btle
 
         scan_processor = ScanProcessor(self.mac)
@@ -33,7 +33,7 @@ class MiscaleWorker(BaseWorker):
         with timeout(
             self.SCAN_TIMEOUT,
             exception=DeviceTimeoutError(
-                "Retrieving the weight from {} device {} timed out after {} seconds".format(
+                "Retrieving data from {} device {} timed out after {} seconds".format(
                     repr(self), self.mac, self.SCAN_TIMEOUT
                 )
             ),
@@ -48,15 +48,36 @@ class MiscaleWorker(BaseWorker):
 class ScanProcessor:
     def __init__(self, mac):
         self._mac = mac
-        self._weight = None
+        self._data = None
 
     def handleDiscovery(self, dev, isNewDev, _):
         if dev.addr == self.mac.lower() and isNewDev:
             for (sdid, desc, data) in dev.getScanData():
-                if data.startswith("1d18") and sdid == 22:
-                    measured = int((data[8:10] + data[6:8]), 16) * 0.01
 
-                    self._weight = round(measured / 2, 2)
+                # Xiaomi Scale V1
+                if data.startswith('1d18') and sdid == 22:
+                    measunit = data[4:6]
+                    measured = int((data[8:10] + data[6:8]), 16) * 0.01
+                    unit = ''
+
+                    if measunit.startswith(('03', 'b3')): unit = 'lbs'
+                    if measunit.startswith(('12', 'b2')): unit = 'jin'
+                    if measunit.startswith(('22', 'a2')): unit = 'kg' ; measured = measured / 2
+
+                    self._data = round(measured, 2)
+                    # self._data = round(measured , 2), unit, "", ""
+
+                # Xiaomi Scale V2
+                if data.startswith('1b18') and sdid == 22:
+                    measunit = data[4:6]
+                    measured = int((data[28:30] + data[26:28]), 16) * 0.01
+                    unit = ''
+
+                    if measunit == "03": unit = 'lbs'
+                    if measunit == "02": unit = 'kg' ; measured = measured / 2
+
+                    self._data = round(measured, 2)
+                    # self._data = round(measured , 2), unit, str(mitdatetime), miimpedance
 
     @property
     def mac(self):
@@ -64,4 +85,4 @@ class ScanProcessor:
 
     @property
     def weight(self):
-        return self._weight
+        return self._data
