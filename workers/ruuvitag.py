@@ -30,20 +30,20 @@ REQUIREMENTS = ["ruuvitag_sensor"]
 # +-----------------------------+---+---+---+---+
 ATTR_CONFIG = [
     # (attribute_name, device_class, unit_of_measurement)
-    ("acceleration", "acceleration", "mG"),
-    ("acceleration_x", "acceleration_x", "mG"),
-    ("acceleration_y", "acceleration_y", "mG"),
-    ("acceleration_z", "acceleration_z", "mG"),
+    ("acceleration", "none", "mG"),
+    ("acceleration_x", "none", "mG"),
+    ("acceleration_y", "none", "mG"),
+    ("acceleration_z", "none", "mG"),
     ("battery", "battery", "mV"),
-    ("data_format", "data_format", ""),
+    ("data_format", "none", ""),
     ("humidity", "humidity", "%"),
-    ("identifier", "identifier", ""),
-    ("mac", "mac", ""),
-    ("measurement_sequence_number", "measurement_sequence_number", ""),
-    ("movement_counter", "movement_counter", ""),
+    ("identifier", "none", ""),
+    ("mac", "none", ""),
+    ("measurement_sequence_number", "none", ""),
+    ("movement_counter", "none", ""),
     ("pressure", "pressure", "hPa"),
     ("temperature", "temperature", "°C"),
-    ("tx_power", "signal_strength", "dBm"),
+    ("tx_power", "none", "dBm"),
 ]
 ATTR_LOW_BATTERY = "low_battery"
 # "[Y]ou should plan to replace the battery when the voltage drops below 2.5 volts"
@@ -76,7 +76,7 @@ class RuuvitagWorker(BaseWorker):
             "name": self.format_discovery_name(name),
         }
 
-        for attr, device_class, unit in ATTR_CONFIG:
+        for _, device_class, unit in ATTR_CONFIG:
             payload = {
                 "unique_id": self.format_discovery_id(mac, name, device_class),
                 "name": self.format_discovery_name(name, device_class),
