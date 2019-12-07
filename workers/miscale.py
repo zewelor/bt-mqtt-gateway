@@ -19,11 +19,11 @@ class MiscaleWorker(BaseWorker):
     def status_update(self):
         return [
             MqttMessage(
-                topic=self.format_topic("weight/kg"), payload=self._get_data()
+                topic=self.format_topic("weight/kg"), payload=self._get_weight()
             )
         ]
 
-    def _get_data(self):
+    def _get_weight(self):
         from bluepy import btle
 
         scan_processor = ScanProcessor(self.mac)
@@ -48,7 +48,10 @@ class MiscaleWorker(BaseWorker):
 class ScanProcessor:
     def __init__(self, mac):
         self._mac = mac
-        self._data = None
+        self._weight = None
+        self._unit = None
+        self._mitdatetime = None
+        self._miimpedance = None
 
     def handleDiscovery(self, dev, isNewDev, _):
         if dev.addr == self.mac.lower() and isNewDev:
@@ -64,7 +67,8 @@ class ScanProcessor:
                     if measunit.startswith(('12', 'b2')): unit = 'jin'
                     if measunit.startswith(('22', 'a2')): unit = 'kg' ; measured = measured / 2
 
-                    self._data = round(measured, 2)
+                    self._weight = round(measured, 2)
+                    self._unit = unit
                     # self._data = round(measured , 2), unit, "", ""
 
                 # Xiaomi Scale V2
@@ -75,10 +79,13 @@ class ScanProcessor:
 
                     if measunit == "03": unit = 'lbs'
                     if measunit == "02": unit = 'kg' ; measured = measured / 2
-                    # mitdatetime = datetime.strptime(str(int((data[10:12] + data[8:10]), 16)) + " " + str(int((data[12:14]), 16)) +" "+ str(int((data[14:16]), 16)) +" "+ str(int((data[16:18]), 16)) +" "+ str(int((data[18:20]), 16)) +" "+ str(int((data[20:22]), 16)), "%Y %m %d %H %M %S")
-                    # miimpedance = str(int((data[24:26] + data[22:24]), 16))
+                    mitdatetime = datetime.strptime(str(int((data[10:12] + data[8:10]), 16)) + " " + str(int((data[12:14]), 16)) +" "+ str(int((data[14:16]), 16)) +" "+ str(int((data[16:18]), 16)) +" "+ str(int((data[18:20]), 16)) +" "+ str(int((data[20:22]), 16)), "%Y %m %d %H %M %S")
+                    miimpedance = str(int((data[24:26] + data[22:24]), 16))
 
-                    self._data = round(measured, 2)
+                    self._weight = round(measured, 2)
+                    self._unit = unit
+                    self._unit = str(mitdatetime)
+                    self._miimpedance = miimpedance
                     # self._data = round(measured , 2), unit, str(mitdatetime), miimpedance
 
     @property
@@ -87,4 +94,13 @@ class ScanProcessor:
 
     @property
     def weight(self):
-        return self._data
+        return self._weight
+    @property
+    def unit(self):
+        return self._unit
+    @property
+    def midatetime(self):
+        return self._midatetime
+    @property
+    def mitimpedance(self):
+        return self._mitimpedance§
