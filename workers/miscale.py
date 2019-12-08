@@ -1,3 +1,4 @@
+import datetime
 import time
 from interruptingcow import timeout
 
@@ -17,13 +18,16 @@ class MiscaleWorker(BaseWorker):
     SCAN_TIMEOUT = 5
 
     def status_update(self):
-        return [
-            MqttMessage(
-                topic=self.format_topic("weight/kg"), payload=self._get_weight()
-            )
-        ]
+        results = self._get_data()
+        messages = [MqttMessage(topic=self.format_topic("weight/" + results.unit), payload=results.weight)]
+        if results.miimpedance:
+            messages.append(MqttMessage(topic=self.format_topic("miimpedance"), payload=results.miimpedance))
+        if results.midatetime:
+            messages.append(MqttMessage(topic=self.format_topic("midatetime"), payload=results.midatetime))
 
-    def _get_weight(self):
+        return messages
+
+    def _get_data(self):
         from bluepy import btle
 
         scan_processor = ScanProcessor(self.mac)
@@ -38,69 +42,129 @@ class MiscaleWorker(BaseWorker):
                 )
             ),
         ):
-            while scan_processor.weight is None:
+            while not scan_processor.ready:
                 time.sleep(1)
-            return scan_processor.weight
+            return scan_processor.results
 
-        return -1
+        return scan_processor.results
 
 
 class ScanProcessor:
     def __init__(self, mac):
+        self._ready = False
         self._mac = mac
-        self._weight = None
-        self._unit = None
-        self._mitdatetime = None
-        self._miimpedance = None
+        self._results = MiWeightScaleData()
 
     def handleDiscovery(self, dev, isNewDev, _):
         if dev.addr == self.mac.lower() and isNewDev:
             for (sdid, desc, data) in dev.getScanData():
 
                 # Xiaomi Scale V1
-                if data.startswith('1d18') and sdid == 22:
+                if data.startswith("1d18") and sdid == 22:
                     measunit = data[4:6]
                     measured = int((data[8:10] + data[6:8]), 16) * 0.01
-                    unit = ''
+                    unit = ""
 
-                    if measunit.startswith(('03', 'b3')): unit = 'lbs'
-                    if measunit.startswith(('12', 'b2')): unit = 'jin'
-                    if measunit.startswith(('22', 'a2')): unit = 'kg' ; measured = measured / 2
+                    if measunit.startswith(("03", "b3")):
+                        unit = "lbs"
+                    elif measunit.startswith(("12", "b2")):
+                        unit = "jin"
+                    elif measunit.startswith(("22", "a2")):
+                        unit = "kg"
+                        measured = measured / 2
 
-                    self._weight = round(measured, 2)
-                    self._unit = unit
-                    # self._data = round(measured , 2), unit, "", ""
+                    self.results.weight = round(measured, 2)
+                    self.results.unit = unit
+
+                    self.ready = True
 
                 # Xiaomi Scale V2
-                if data.startswith('1b18') and sdid == 22:
+                if data.startswith("1b18") and sdid == 22:
                     measunit = data[4:6]
                     measured = int((data[28:30] + data[26:28]), 16) * 0.01
-                    unit = ''
+                    unit = ""
 
-                    if measunit == "03": unit = 'lbs'
-                    if measunit == "02": unit = 'kg' ; measured = measured / 2
-                    mitdatetime = datetime.strptime(str(int((data[10:12] + data[8:10]), 16)) + " " + str(int((data[12:14]), 16)) +" "+ str(int((data[14:16]), 16)) +" "+ str(int((data[16:18]), 16)) +" "+ str(int((data[18:20]), 16)) +" "+ str(int((data[20:22]), 16)), "%Y %m %d %H %M %S")
-                    miimpedance = str(int((data[24:26] + data[22:24]), 16))
+                    if measunit == "03":
+                        unit = "lbs"
+                    elif measunit == "02":
+                        unit = "kg"
+                        measured = measured / 2
 
-                    self._weight = round(measured, 2)
-                    self._unit = unit
-                    self._unit = str(mitdatetime)
-                    self._miimpedance = miimpedance
-                    # self._data = round(measured , 2), unit, str(mitdatetime), miimpedance
+                    midatetime = datetime.strptime(
+                        str(int((data[10:12] + data[8:10]), 16))
+                        + " "
+                        + str(int((data[12:14]), 16))
+                        + " "
+                        + str(int((data[14:16]), 16))
+                        + " "
+                        + str(int((data[16:18]), 16))
+                        + " "
+                        + str(int((data[18:20]), 16))
+                        + " "
+                        + str(int((data[20:22]), 16)),
+                        "%Y %m %d %H %M %S",
+                    )
+
+                    self.results.weight = round(measured, 2)
+                    self.results.unit = unit
+                    self.results.miimpedance = str(int((data[24:26] + data[22:24]), 16))
+
+                    # self._data = round(measured , 2), unit, str(midatetime), miimpedance
+
+                    self.ready = True
 
     @property
     def mac(self):
         return self._mac
 
     @property
+    def ready(self):
+        return self._ready
+
+    @ready.setter
+    def ready(self, var):
+        self._ready = var
+
+    @property
+    def results(self):
+        return self._results
+
+
+class MiWeightScaleData:
+    def __init__(self):
+        self._weight = None
+        self._unit = None
+        self._midatetime = None
+        self._miimpedance = None
+
+    @property
     def weight(self):
         return self._weight
+
+    @weight.setter
+    def weight(self, var):
+        self._weight = var
+
     @property
     def unit(self):
         return self._unit
+
+    @unit.setter
+    def unit(self, var):
+        self._unit = var
+
     @property
     def midatetime(self):
         return self._midatetime
+
+    @midatetime.setter
+    def midatetime(self, var):
+        self._midatetime = var
+
     @property
-    def mitimpedance(self):
-        return self._mitimpedance§
+    def miimpedance(self):
+        return self._miimpedance
+
+    @miimpedance.setter
+    def miimpedance(self, var):
+        self._miimpedance = var
