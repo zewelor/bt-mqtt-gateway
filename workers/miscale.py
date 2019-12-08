@@ -20,10 +20,10 @@ class MiscaleWorker(BaseWorker):
     def status_update(self):
         results = self._get_data()
         messages = [MqttMessage(topic=self.format_topic("weight/" + results.unit), payload=results.weight)]
-        if results.miimpedance:
-            messages.append(MqttMessage(topic=self.format_topic("miimpedance"), payload=results.miimpedance))
-        if results.midatetime:
-            messages.append(MqttMessage(topic=self.format_topic("midatetime"), payload=results.midatetime))
+        if results.impedance:
+            messages.append(MqttMessage(topic=self.format_topic("impedance"), payload=results.impedance))
+        if results.datetime:
+            messages.append(MqttMessage(topic=self.format_topic("datetime"), payload=results.datetime))
 
         return messages
 
@@ -90,7 +90,7 @@ class ScanProcessor:
                         unit = "kg"
                         measured = measured / 2
 
-                    midatetime = datetime.strptime(
+                    datetime = datetime.strptime(
                         str(int((data[10:12] + data[8:10]), 16))
                         + " "
                         + str(int((data[12:14]), 16))
@@ -102,14 +102,13 @@ class ScanProcessor:
                         + str(int((data[18:20]), 16))
                         + " "
                         + str(int((data[20:22]), 16)),
-                        "%Y %m %d %H %M %S",
+                        "%Y %m %d %H %M %S"
                     )
 
                     self.results.weight = round(measured, 2)
                     self.results.unit = unit
-                    self.results.miimpedance = str(int((data[24:26] + data[22:24]), 16))
-
-                    # self._data = round(measured , 2), unit, str(midatetime), miimpedance
+                    self.results.impedance = str(int((data[24:26] + data[22:24]), 16))
+                    self.results.datetime = str(datetime)
 
                     self.ready = True
 
@@ -134,8 +133,8 @@ class MiWeightScaleData:
     def __init__(self):
         self._weight = None
         self._unit = None
-        self._midatetime = None
-        self._miimpedance = None
+        self._datetime = None
+        self._impedance = None
 
     @property
     def weight(self):
@@ -154,17 +153,17 @@ class MiWeightScaleData:
         self._unit = var
 
     @property
-    def midatetime(self):
-        return self._midatetime
+    def datetime(self):
+        return self._datetime
 
-    @midatetime.setter
-    def midatetime(self, var):
-        self._midatetime = var
+    @datetime.setter
+    def datetime(self, var):
+        self._datetime = var
 
     @property
-    def miimpedance(self):
-        return self._miimpedance
+    def impedance(self):
+        return self._impedance
 
-    @miimpedance.setter
-    def miimpedance(self, var):
-        self._miimpedance = var
+    @impedance.setter
+    def impedance(self, var):
+        self._impedance = var
