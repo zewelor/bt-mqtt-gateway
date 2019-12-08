@@ -22,8 +22,8 @@ class MiscaleWorker(BaseWorker):
         messages = [MqttMessage(topic=self.format_topic("weight/" + results.unit), payload=results.weight)]
         if results.impedance:
             messages.append(MqttMessage(topic=self.format_topic("impedance"), payload=results.impedance))
-        if results.datetime:
-            messages.append(MqttMessage(topic=self.format_topic("datetime"), payload=results.datetime))
+        if results.midatetime:
+            messages.append(MqttMessage(topic=self.format_topic("midatetime"), payload=results.midatetime))
 
         return messages
 
@@ -90,7 +90,7 @@ class ScanProcessor:
                         unit = "kg"
                         measured = measured / 2
 
-                    datetime = datetime.strptime(
+                    midatetime = datetime.strptime(
                         str(int((data[10:12] + data[8:10]), 16))
                         + " "
                         + str(int((data[12:14]), 16))
@@ -108,7 +108,7 @@ class ScanProcessor:
                     self.results.weight = round(measured, 2)
                     self.results.unit = unit
                     self.results.impedance = str(int((data[24:26] + data[22:24]), 16))
-                    self.results.datetime = str(datetime)
+                    self.results.midatetime = str(midatetime)
 
                     self.ready = True
 
@@ -133,7 +133,7 @@ class MiWeightScaleData:
     def __init__(self):
         self._weight = None
         self._unit = None
-        self._datetime = None
+        self._midatetime = None
         self._impedance = None
 
     @property
@@ -153,12 +153,12 @@ class MiWeightScaleData:
         self._unit = var
 
     @property
-    def datetime(self):
-        return self._datetime
+    def midatetime(self):
+        return self._midatetime
 
-    @datetime.setter
-    def datetime(self, var):
-        self._datetime = var
+    @midatetime.setter
+    def midatetime(self, var):
+        self._midatetime = var
 
     @property
     def impedance(self):
