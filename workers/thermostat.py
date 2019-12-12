@@ -9,13 +9,13 @@ import logger
 REQUIREMENTS = ["python-eq3bt"]
 _LOGGER = logger.get(__name__)
 
-STATE_AWAY = "away"
-STATE_ECO = "eco"
 STATE_HEAT = "heat"
 STATE_AUTO = "auto"
-STATE_MANUAL = "manual"
-STATE_ON = "on"
 STATE_OFF = "off"
+
+HOLD_BOOST = "boost"
+HOLD_MANUAL = "comfort"
+HOLD_ECO = "eco"
 
 SENSOR_CLIMATE = "climate"
 SENSOR_WINDOW = "window_open"
@@ -34,43 +34,6 @@ monitoredAttrs = [
 
 
 class ThermostatWorker(BaseWorker):
-    class ModesMapper:
-        def __init__(self):
-            from eq3bt import Mode
-
-            self._mapped_modes = {
-                Mode.Closed: STATE_OFF,
-                Mode.Open: STATE_ON,
-                Mode.Auto: STATE_AUTO,
-                Mode.Manual: STATE_MANUAL,
-                Mode.Away: STATE_ECO,
-                Mode.Boost: STATE_HEAT,
-            }
-
-            self._reverse_modes = {v: k for k, v in self._mapped_modes.items()}
-
-        def get_mapping(self, mode):
-            if mode < 0:
-                return None
-            return self._mapped_modes[mode]
-
-        def get_reverse_mapping(self, mode):
-            return self._reverse_modes[mode]
-
-        @staticmethod
-        def away_mode_on_off(mode):
-            if mode == STATE_ECO:
-                return STATE_ON
-            else:
-                return STATE_OFF
-
-        @staticmethod
-        def on_off_to_mode(on_off):
-            if on_off == STATE_ON:
-                return STATE_ECO
-            else:
-                return STATE_HEAT
-
     def _setup(self):
         from eq3bt import Thermostat
 
@@ -97,7 +60,6 @@ class ThermostatWorker(BaseWorker):
                 name,
                 self.devices[name]["mac"],
             )
-        self._modes_mapper = self.ModesMapper()
 
     def config(self):
         ret = []
@@ -127,14 +89,15 @@ class ThermostatWorker(BaseWorker):
             ),
             "mode_state_topic": self.format_prefixed_topic(name, "mode"),
             "mode_command_topic": self.format_prefixed_topic(name, "mode", "set"),
-            "away_mode_state_topic": self.format_prefixed_topic(name, "away"),
-            "away_mode_command_topic": self.format_prefixed_topic(name, "away", "set"),
+            "hold_state_topic": self.format_prefixed_topic(name, "hold"),
+            "hold_command_topic": self.format_prefixed_topic(name, "mode", "set"),
             "min_temp": 5.0,
             "max_temp": 29.5,
             "temp_step": 0.5,
             "payload_on": "on",
             "payload_off": "off",
             "modes": [STATE_HEAT, STATE_AUTO, STATE_OFF],
+            "hold_modes": [HOLD_BOOST, HOLD_MANUAL, HOLD_ECO],
             "device": device,
         }
         if data.get("discovery_temperature_topic"):
@@ -243,6 +206,7 @@ class ThermostatWorker(BaseWorker):
 
     def on_command(self, topic, value):
         from bluepy import btle
+        from eq3bt import Mode
 
         topic_without_prefix = topic.replace("{}/".format(self.topic_prefix), "")
         device_name, method, _ = topic_without_prefix.split("/")
@@ -251,14 +215,16 @@ class ThermostatWorker(BaseWorker):
         thermostat = data["thermostat"]
 
         value = value.decode("utf-8")
-
-        if method == STATE_AWAY:
-            method = "mode"
-            value = self.ModesMapper.on_off_to_mode(value)
-
-        # It needs to be on separate if because first if can change method
         if method == "mode":
-            value = self._modes_mapper.get_reverse_mapping(value)
+            mapping = {
+                STATE_HEAT: Mode.Boost,
+                STATE_AUTO: Mode.Auto,
+                STATE_OFF: Mode.Closed,
+                HOLD_BOOST: Mode.Boost,
+                HOLD_MANUAL: Mode.Manual,
+                HOLD_ECO: Mode.Away,
+            }
+            value = mapping.get(value)
         elif method == "target_temperature":
             value = float(value)
 
@@ -288,6 +254,8 @@ class ThermostatWorker(BaseWorker):
         return self.present_device_state(device_name, thermostat)
 
     def present_device_state(self, name, thermostat):
+        from eq3bt import Mode
+
         ret = []
         for attr in monitoredAttrs:
             ret.append(
@@ -297,13 +265,20 @@ class ThermostatWorker(BaseWorker):
                 )
             )
 
-        ha_mode = self._modes_mapper.get_mapping(thermostat.mode)
-        ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=ha_mode))
-        ret.append(
-            MqttMessage(
-                topic=self.format_topic(name, STATE_AWAY),
-                payload=self.ModesMapper.away_mode_on_off(ha_mode),
-            )
-        )
+        mapping = {
+            Mode.Auto: STATE_AUTO,
+            Mode.Closed: STATE_OFF,
+        }
+        mode = mapping.get(thermostat.mode, STATE_HEAT)
+
+        mapping = {
+            Mode.Boost: HOLD_BOOST,
+            Mode.Manual: HOLD_MANUAL,
+            Mode.Away: HOLD_ECO,
+        }
+        hold = mapping.get(thermostat.mode)
+
+        ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=mode))
+        ret.append(MqttMessage(topic=self.format_topic(name, "hold"), payload=hold))
 
         return ret
