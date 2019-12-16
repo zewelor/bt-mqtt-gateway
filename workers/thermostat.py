@@ -226,7 +226,7 @@ class ThermostatWorker(BaseWorker):
                 STATE_OFF: Mode.Closed,
             }
             if value in state_mapping:
-                value = state_mapping.get(value)
+                value = state_mapping[value]
             else:
                 logger.log_exception(
                     _LOGGER,
