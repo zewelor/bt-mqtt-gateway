@@ -221,7 +221,7 @@ class ThermostatWorker(BaseWorker):
         value = value.decode("utf-8")
         if method == "mode":
             mapping = {
-                STATE_HEAT: Mode.Boost,
+                STATE_HEAT: Mode.Manual,
                 STATE_AUTO: Mode.Auto,
                 STATE_OFF: Mode.Closed,
                 HOLD_BOOST: Mode.Boost,
