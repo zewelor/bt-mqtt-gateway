@@ -25,13 +25,6 @@ class MiscaleWorker(BaseWorker):
         d2 = datetime.strptime(datetime.today().strftime('%Y-%m-%d'), '%Y-%m-%d')
         return abs((d2 - d1).days)/365
     
-    def _setup(self):
-        try:
-            if self.users:
-                self.is_users = True
-        except:
-            self.is_users = False
-    
     def status_update(self):
         results = self._get_data()
         
@@ -41,12 +34,9 @@ class MiscaleWorker(BaseWorker):
         if results.midatetime:
             messages.append(MqttMessage(topic=self.format_topic("midatetime"), payload=results.midatetime))
         
-        if self.is_users:
+        if hasattr(self, 'users'):
             for key, item in self.users.items():
-                greater = float(item['weight_template'].split(' to ')[0])
-                less = float(item['weight_template'].split(' to ')[1])
-                
-                if results.weight > greater and results.weight < less:
+                if results.weight > item['weight_template']['min'] and results.weight < item['weight_template']['max']:
                     user = key
                     sex = item['sex']
                     height = item['height']
