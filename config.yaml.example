@@ -40,16 +40,17 @@ manager:
       args:
         mac: 00:11:22:33:44:55
         topic_prefix: miscale
-        user1_gt: 70                # If the weight is greater than this number, we'll assume that we're weighing User #1
-        user1_sex: male             # Sex (male or female)
-        user1_name: Alex            # Name (used in MQTT to define a user topic)
-        user1_height: 180           # Height (in cm)
-        user1_dob: 2000-01-11       # DOB (in yyyy-mm-dd format)
-        user2_lt: 50                # If the weight is less than this number, we'll assume that we're weighing User #2
-        user2_sex: female
-        user2_name: Olivia
-        user2_height: 150
-        user2_dob: 2000-02-22
+        users:                         # Used for recognizing multiple people, as well as for decoding body metrics! (Optional)
+          Alex:                        # Name (used in MQTT to define a user topic)
+            weight_template: 70 to 90  # The weight template that the user will be tracked by!
+            sex: male                  # Sex (male or female)
+            height: 185                # Height (in cm)
+            dob: 2000-01-11            # DOB (in yyyy-mm-dd format)
+          Olivia:
+            weight_template: 30 to 60
+            sex: female
+            height: 165
+            dob: 2000-02-22
       update_interval: 1800
     linakdesk:
       args:
