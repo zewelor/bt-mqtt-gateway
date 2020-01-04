@@ -36,7 +36,7 @@ class MiscaleWorker(BaseWorker):
         
         if hasattr(self, 'users'):
             for key, item in self.users.items():
-                if results.weight > item['weight_template']['min'] and results.weight < item['weight_template']['max']:
+                if results.weight >= item['weight_template']['min'] and results.weight <= item['weight_template']['max']:
                     user = key
                     sex = item['sex']
                     height = item['height']
