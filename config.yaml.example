@@ -40,6 +40,21 @@ manager:
       args:
         mac: 00:11:22:33:44:55
         topic_prefix: miscale
+        users:                         # Used for recognizing multiple people, as well as for decoding body metrics! (Optional)
+          Alex:                        # Name (used in MQTT to define a user topic)
+            weight_template:           # The weight template that the user will be tracked by!
+              min: 70
+              max: 90
+            sex: male                  # Sex (male or female)
+            height: 185                # Height (in cm)
+            dob: 2000-01-11            # DOB (in yyyy-mm-dd format)
+          Olivia:
+            weight_template:
+              min: 30
+              max: 60
+            sex: female
+            height: 165
+            dob: 2000-02-22
       update_interval: 1800
     linakdesk:
       args:
