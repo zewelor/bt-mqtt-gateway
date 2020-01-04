@@ -23,6 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
+**Debug gateway logs**
+run gateway.py with -d switch and paste formatted output log
+
 **Server (please complete the following information):**
  - OS: [e.g. Linux]
  - Distro: [e.g. Raspbian]
