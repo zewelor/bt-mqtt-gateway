@@ -1,4 +1,5 @@
 from math import floor
+import json
 
 from datetime import datetime
 import time
@@ -24,40 +25,52 @@ class MiscaleWorker(BaseWorker):
         d2 = datetime.strptime(datetime.today().strftime('%Y-%m-%d'), '%Y-%m-%d')
         return abs((d2 - d1).days)/365
     
+    def _setup(self):
+        try:
+            if self.users:
+                self.is_users = True
+        except:
+            self.is_users = False
+    
     def status_update(self):
         results = self._get_data()
         
-        if int(results.weight) > self.user1_gt:
-            user = self.user1_name
-            height = self.user1_height
-            age = self.getAge(self.user1_dob)
-            sex = self.user1_sex
-        elif int(results.weight) < self.user2_lt:
-            user = self.user2_name
-            height = self.user2_height
-            age = self.getAge(self.user2_dob)
-            sex = self.user2_sex
-        
-        lib = bodyMetrics(results.weight, height, age, sex, 0)
-        message = '{'
-        message += '"Weight":"' + "{:.2f}".format(results.weight) + '"'
-        message += ',"BMI":"' + "{:.2f}".format(lib.getBMI()) + '"'
-        message += ',"Basal Metabolism":"' + "{:.2f}".format(lib.getBMR()) + '"'
-        message += ',"Visceral Fat":"' + "{:.2f}".format(lib.getVisceralFat()) + '"'
-        
+        messages = [MqttMessage(topic=self.format_topic("weight/" + results.unit), payload=results.weight)]
         if results.impedance:
-            lib = bodyMetrics(results.weight, height, age, sex, int(results.impedance))
-            message += ',"Lean Body Mass":"' + "{:.2f}".format(lib.getLBMCoefficient()) + '"'
-            message += ',"Body Fat":"' + "{:.2f}".format(lib.getFatPercentage()) + '"'
-            message += ',"Water":"' + "{:.2f}".format(lib.getWaterPercentage()) + '"'
-            message += ',"Bone Mass":"' + "{:.2f}".format(lib.getBoneMass()) + '"'
-            message += ',"Muscle Mass":"' + "{:.2f}".format(lib.getMuscleMass()) + '"'
-            message += ',"Protein":"' + "{:.2f}".format(lib.getProteinPercentage()) + '"'
-            messages = [MqttMessage(topic=self.format_topic(user), payload=results.weight)]
+            messages.append(MqttMessage(topic=self.format_topic("impedance"), payload=results.impedance))
+        if results.midatetime:
+            messages.append(MqttMessage(topic=self.format_topic("midatetime"), payload=results.midatetime))
         
-        message += ',"TimeStamp":"' + results.midatetime + '"'
-        message += '}'
-        messages = [MqttMessage(topic=self.format_topic(user + "/weight"), payload=message)]
+        if self.is_users:
+            for key, item in self.users.items():
+                greater = float(item['weight_template'].split(' to ')[0])
+                less = float(item['weight_template'].split(' to ')[1])
+                
+                if results.weight > greater and results.weight < less:
+                    user = key
+                    sex = item['sex']
+                    height = item['height']
+                    age = self.getAge(item['dob'])
+                    
+                    lib = bodyMetrics(results.weight, height, age, sex, 0)
+                    metrics = {
+                        'weight': float("{:.2f}".format(results.weight)),
+                        'bmi': float("{:.2f}".format(lib.getBMI())),
+                        'basal_metabolism': float("{:.2f}".format(lib.getBMR())),
+                        'visceral_fat': float("{:.2f}".format(lib.getVisceralFat()))
+                    }
+                    
+                    if results.impedance:
+                        lib = bodyMetrics(results.weight, height, age, sex, int(results.impedance))
+                        metrics['lean_body_mass'] = float("{:.2f}".format(lib.getLBMCoefficient()))
+                        metrics['body_fat'] = float("{:.2f}".format(lib.getFatPercentage()))
+                        metrics['water'] = float("{:.2f}".format(lib.getWaterPercentage()))
+                        metrics['bone_mass'] = float("{:.2f}".format(lib.getBoneMass()))
+                        metrics['muscle_mass'] = float("{:.2f}".format(lib.getMuscleMass()))
+                        metrics['protein'] = float("{:.2f}".format(lib.getProteinPercentage()))
+                    
+                    metrics['timestamp'] = results.midatetime
+                    messages.append(MqttMessage(topic=self.format_topic("users/" + user), payload=json.dumps(metrics)))
 
         return messages
 
