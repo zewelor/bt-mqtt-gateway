@@ -151,11 +151,22 @@ class MqttMessage:
 
     @property
     def payload(self):
+        if isinstance(self.raw_payload, str):
+            return self.raw_payload
+        else:
+            return json.dumps(self.raw_payload)
+
+    @property
+    def raw_payload(self):
         return self._payload
 
     @property
     def retain(self):
         return self._retain
+
+    @retain.setter
+    def retain(self, new_retain):
+        self._retain = new_retain
 
     @property
     def as_dict(self):
@@ -176,14 +187,4 @@ class MqttConfigMessage(MqttMessage):
     use_global_prefix = False
 
     def __init__(self, component, name, payload=None, retain=False):
-        super().__init__(
-            "{}/{}/config".format(component, name), json.dumps(payload), retain
-        )
-
-    @property
-    def retain(self):
-        return self._retain
-
-    @retain.setter
-    def retain(self, new_retain):
-        self._retain = new_retain
+        super().__init__("{}/{}/config".format(component, name), payload, retain)
