@@ -71,7 +71,7 @@ class MiscaleWorker(BaseWorker):
                         lib = bodyMetrics(
                             results.weight, height, age, sex, int(results.impedance)
                         )
-                        metrics["impedance"] = float("{:.2f}".format(results.impedance))
+                        metrics["impedance"] = results.impedance
                         metrics["lean_body_mass"] = float(
                             "{:.2f}".format(lib.getLBMCoefficient())
                         )
@@ -180,7 +180,7 @@ class ScanProcessor:
 
                     self.results.weight = round(measured, 2)
                     self.results.unit = unit
-                    self.results.impedance = str(int((data[24:26] + data[22:24]), 16))
+                    self.results.impedance = int((data[24:26] + data[22:24]), 16)
                     self.results.midatetime = str(midatetime)
 
                     self.ready = True
