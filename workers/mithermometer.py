@@ -6,7 +6,7 @@ from interruptingcow import timeout
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ["mithermometer", "bluepy"]
+REQUIREMENTS = ["mithermometer==0.1.4", "bluepy"]
 monitoredAttrs = ["temperature", "humidity", "battery"]
 _LOGGER = logger.get(__name__)
 
