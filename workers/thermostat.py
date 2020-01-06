@@ -13,6 +13,7 @@ STATE_HEAT = "heat"
 STATE_AUTO = "auto"
 STATE_OFF = "off"
 
+HOLD_NONE = "none"
 HOLD_BOOST = "boost"
 HOLD_MANUAL = "comfort"
 HOLD_ECO = "eco"
@@ -282,7 +283,7 @@ class ThermostatWorker(BaseWorker):
             Mode.Manual: HOLD_MANUAL,
             Mode.Away: HOLD_ECO,
         }
-        hold = mapping.get(thermostat.mode)
+        hold = mapping.get(thermostat.mode, HOLD_NONE)
 
         ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=mode))
         ret.append(MqttMessage(topic=self.format_topic(name, "hold"), payload=hold))
