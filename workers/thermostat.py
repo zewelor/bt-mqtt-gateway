@@ -91,6 +91,9 @@ class ThermostatWorker(BaseWorker):
             "mode_command_topic": self.format_prefixed_topic(name, "mode", "set"),
             "hold_state_topic": self.format_prefixed_topic(name, "hold"),
             "hold_command_topic": self.format_prefixed_topic(name, "mode", "set"),
+            "json_attributes_topic": self.format_prefixed_topic(
+                name, "json_attributes"
+            ),
             "min_temp": 5.0,
             "max_temp": 29.5,
             "temp_step": 0.5,
@@ -257,18 +260,21 @@ class ThermostatWorker(BaseWorker):
         from eq3bt import Mode
 
         ret = []
+        attributes = {}
         for attr in monitoredAttrs:
-            ret.append(
-                MqttMessage(
-                    topic=self.format_topic(name, attr),
-                    payload=getattr(thermostat, attr),
-                )
-            )
+            value = getattr(thermostat, attr)
+            ret.append(MqttMessage(topic=self.format_topic(name, attr), payload=value))
 
-        mapping = {
-            Mode.Auto: STATE_AUTO,
-            Mode.Closed: STATE_OFF,
-        }
+            if attr != SENSOR_TARGET_TEMPERATURE:
+                attributes[attr] = value
+
+        ret.append(
+            MqttMessage(
+                topic=self.format_topic(name, "json_attributes"), payload=attributes
+            )
+        )
+
+        mapping = {Mode.Auto: STATE_AUTO, Mode.Closed: STATE_OFF}
         mode = mapping.get(thermostat.mode, STATE_HEAT)
 
         mapping = {
