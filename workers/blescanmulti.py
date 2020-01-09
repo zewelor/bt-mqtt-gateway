@@ -109,16 +109,30 @@ class BlescanmultiWorker(BaseWorker):
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
 
     def status_update(self):
+        from bluepy import btle
+
         _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
-        devices = self.scanner.scan(
-            float(self.scan_timeout), passive=booleanize(self.scan_passive)
-        )
-        mac_addresses = {device.addr: device for device in devices}
+
         ret = []
 
-        for status in self.last_status:
-            device = mac_addresses.get(status.mac, None)
-            status.set_status(device is not None)
-            ret += status.generate_messages(device)
+        try:
+            devices = self.scanner.scan(
+                float(self.scan_timeout), passive=booleanize(self.scan_passive)
+            )
+            mac_addresses = {device.addr: device for device in devices}
+
+            for status in self.last_status:
+                device = mac_addresses.get(status.mac, None)
+                status.set_status(device is not None)
+                ret += status.generate_messages(device)
+
+        except btle.BTLEException as e:
+            logger.log_exception(
+                _LOGGER,
+                "Error during update (%s)",
+                repr(self),
+                type(e).__name__,
+                suppress=True,
+            )
 
         return ret
