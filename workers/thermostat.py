@@ -123,8 +123,8 @@ class ThermostatWorker(BaseWorker):
             "name": self.format_discovery_name(name, SENSOR_WINDOW),
             "state_topic": self.format_prefixed_topic(name, SENSOR_WINDOW),
             "device_class": "window",
-            "payload_on": "True",
-            "payload_off": "False",
+            "payload_on": "true",
+            "payload_off": "false",
             "device": device,
         }
         ret.append(
@@ -140,8 +140,8 @@ class ThermostatWorker(BaseWorker):
             "name": self.format_discovery_name(name, SENSOR_BATTERY),
             "state_topic": self.format_prefixed_topic(name, SENSOR_BATTERY),
             "device_class": "battery",
-            "payload_on": "True",
-            "payload_off": "False",
+            "payload_on": "true",
+            "payload_off": "false",
             "device": device,
         }
         ret.append(
@@ -157,8 +157,8 @@ class ThermostatWorker(BaseWorker):
             "name": self.format_discovery_name(name, SENSOR_LOCKED),
             "state_topic": self.format_prefixed_topic(name, SENSOR_LOCKED),
             "device_class": "lock",
-            "payload_on": "False",
-            "payload_off": "True",
+            "payload_on": "false",
+            "payload_off": "true",
             "device": device,
         }
         ret.append(
