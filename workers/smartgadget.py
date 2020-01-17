@@ -60,12 +60,11 @@ class SmartgadgetWorker(BaseWorker):
     def status_update(self):
         from bluepy import btle
 
-        ret = []
         _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
         for name, device in self.devices.items():
             _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, device.mac)
             try:
-                ret.extend(self.update_device_state(name, device))
+                yield self.update_device_state(name, device)
             except btle.BTLEException as e:
                 logger.log_exception(
                     _LOGGER,
@@ -76,7 +75,6 @@ class SmartgadgetWorker(BaseWorker):
                     type(e).__name__,
                     suppress=True,
                 )
-        return ret
 
     def update_device_state(self, name, device):
         values = device.get_values()
