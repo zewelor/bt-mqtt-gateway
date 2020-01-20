@@ -6,7 +6,7 @@ from mqtt import MqttMessage, MqttConfigMessage
 from workers.base import BaseWorker
 import logger
 
-REQUIREMENTS = ["python-eq3bt"]
+REQUIREMENTS = ["python-eq3bt==0.1.11"]
 _LOGGER = logger.get(__name__)
 
 STATE_HEAT = "heat"
