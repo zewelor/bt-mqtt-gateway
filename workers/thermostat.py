@@ -311,7 +311,7 @@ class ThermostatWorker(BaseWorker):
         elif thermostat.target_temperature == thermostat.eco_temperature:
             hold = HOLD_ECO
         else:
-            hold = None
+            hold = HOLD_NONE
 
         ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=mode))
         ret.append(MqttMessage(topic=self.format_topic(name, "hold"), payload=hold))
