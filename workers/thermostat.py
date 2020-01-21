@@ -17,6 +17,7 @@ HOLD_NONE = "none"
 HOLD_BOOST = "boost"
 HOLD_COMFORT = "comfort"
 HOLD_ECO = "eco"
+HOLD_AWAY = "away"
 
 SENSOR_CLIMATE = "climate"
 SENSOR_WINDOW = "window_open"
@@ -101,7 +102,7 @@ class ThermostatWorker(BaseWorker):
             "payload_on": "on",
             "payload_off": "off",
             "modes": [STATE_HEAT, STATE_AUTO, STATE_OFF],
-            "hold_modes": [HOLD_BOOST, HOLD_COMFORT, HOLD_ECO],
+            "hold_modes": [HOLD_BOOST, HOLD_AWAY, HOLD_COMFORT, HOLD_ECO],
             "device": device,
         }
         if data.get("discovery_temperature_topic"):
@@ -236,8 +237,11 @@ class ThermostatWorker(BaseWorker):
 
         elif method == "hold":
             if value == HOLD_BOOST:
-                method = "boost"
-                value = True
+                method = "mode"
+                value = Mode.Boost
+            elif value == HOLD_AWAY:
+                method = "mode"
+                value = Mode.Away
             elif value in (HOLD_COMFORT, HOLD_ECO):
                 method = "preset"
             elif value == 'off':
@@ -301,11 +305,13 @@ class ThermostatWorker(BaseWorker):
             )
         )
 
-        mapping = {Mode.Auto: STATE_AUTO, Mode.Closed: STATE_OFF}
+        mapping = {Mode.Auto: STATE_AUTO, Mode.Closed: STATE_OFF, Mode.Boost: STATE_AUTO}
         mode = mapping.get(thermostat.mode, STATE_HEAT)
 
-        if thermostat.boost:
+        if thermostat.mode == Mode.Boost:
             hold = HOLD_BOOST
+        elif thermostat.mode == Mode.Away:
+            hold = HOLD_AWAY
         elif thermostat.target_temperature == thermostat.comfort_temperature:
             hold = HOLD_COMFORT
         elif thermostat.target_temperature == thermostat.eco_temperature:
