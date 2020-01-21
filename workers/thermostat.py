@@ -17,13 +17,13 @@ HOLD_NONE = "none"
 HOLD_BOOST = "boost"
 HOLD_COMFORT = "comfort"
 HOLD_ECO = "eco"
-HOLD_AWAY = "away"
 
 SENSOR_CLIMATE = "climate"
 SENSOR_WINDOW = "window_open"
 SENSOR_BATTERY = "low_battery"
 SENSOR_LOCKED = "locked"
 SENSOR_VALVE = "valve_state"
+SENSOR_AWAY_END = "away_end"
 SENSOR_TARGET_TEMPERATURE = "target_temperature"
 
 monitoredAttrs = [
@@ -91,6 +91,8 @@ class ThermostatWorker(BaseWorker):
             ),
             "mode_state_topic": self.format_prefixed_topic(name, "mode"),
             "mode_command_topic": self.format_prefixed_topic(name, "mode", "set"),
+            "away_mode_state_topic": self.format_prefixed_topic(name, "away"),
+            "away_mode_command_topic": self.format_prefixed_topic(name, "away", "set"),
             "hold_state_topic": self.format_prefixed_topic(name, "hold"),
             "hold_command_topic": self.format_prefixed_topic(name, "hold", "set"),
             "json_attributes_topic": self.format_prefixed_topic(
@@ -99,10 +101,8 @@ class ThermostatWorker(BaseWorker):
             "min_temp": 5.0,
             "max_temp": 29.5,
             "temp_step": 0.5,
-            "payload_on": "on",
-            "payload_off": "off",
             "modes": [STATE_HEAT, STATE_AUTO, STATE_OFF],
-            "hold_modes": [HOLD_BOOST, HOLD_AWAY, HOLD_COMFORT, HOLD_ECO],
+            "hold_modes": [HOLD_BOOST, HOLD_COMFORT, HOLD_ECO],
             "device": device,
         }
         if data.get("discovery_temperature_topic"):
@@ -213,6 +213,8 @@ class ThermostatWorker(BaseWorker):
         from bluepy import btle
         from eq3bt import Mode
 
+        default_fallback_mode = Mode.Auto
+
         topic_without_prefix = topic.replace("{}/".format(self.topic_prefix), "")
         device_name, method, _ = topic_without_prefix.split("/")
 
@@ -229,30 +231,28 @@ class ThermostatWorker(BaseWorker):
             if value in state_mapping:
                 value = state_mapping[value]
             else:
-                logger.log_exception(
-                    _LOGGER,
-                    "Invalid mode setting %s", value,
-                )
+                logger.log_exception(_LOGGER, "Invalid mode setting %s", value)
                 return []
 
         elif method == "hold":
             if value == HOLD_BOOST:
                 method = "mode"
                 value = Mode.Boost
-            elif value == HOLD_AWAY:
-                method = "mode"
-                value = Mode.Away
             elif value in (HOLD_COMFORT, HOLD_ECO):
                 method = "preset"
-            elif value == 'off':
-                return []
+            elif value == "off":
+                method = "mode"
+                value = default_fallback_mode
             else:
-                logger.log_exception(
-                    _LOGGER,
-                    "Invalid hold setting %s", value,
-                )
+                logger.log_exception(_LOGGER, "Invalid hold setting %s", value)
                 return []
 
+        elif method == "away":
+            method = "mode"
+            if value == 'OFF':
+                value = default_fallback_mode
+            else:
+                value = Mode.Away
         elif method == "target_temperature":
             value = float(value)
 
@@ -299,19 +299,28 @@ class ThermostatWorker(BaseWorker):
             if attr != SENSOR_TARGET_TEMPERATURE:
                 attributes[attr] = value
 
+        if thermostat.away_end:
+            attributes[SENSOR_AWAY_END] = thermostat.away_end.isoformat()
+        else:
+            attributes[SENSOR_AWAY_END] = None
+
         ret.append(
             MqttMessage(
                 topic=self.format_topic(name, "json_attributes"), payload=attributes
             )
         )
 
-        mapping = {Mode.Auto: STATE_AUTO, Mode.Closed: STATE_OFF, Mode.Boost: STATE_AUTO}
+        mapping = {
+            Mode.Auto: STATE_AUTO,
+            Mode.Closed: STATE_OFF,
+            Mode.Boost: STATE_AUTO,
+        }
         mode = mapping.get(thermostat.mode, STATE_HEAT)
 
         if thermostat.mode == Mode.Boost:
             hold = HOLD_BOOST
         elif thermostat.mode == Mode.Away:
-            hold = HOLD_AWAY
+            hold = "off"
         elif thermostat.target_temperature == thermostat.comfort_temperature:
             hold = HOLD_COMFORT
         elif thermostat.target_temperature == thermostat.eco_temperature:
@@ -321,5 +330,11 @@ class ThermostatWorker(BaseWorker):
 
         ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=mode))
         ret.append(MqttMessage(topic=self.format_topic(name, "hold"), payload=hold))
+        ret.append(
+            MqttMessage(
+                topic=self.format_topic(name, "away"),
+                payload=self.true_false_to_ha_on_off(thermostat.mode == Mode.Away),
+            )
+        )
 
         return ret
