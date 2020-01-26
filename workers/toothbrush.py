@@ -1,6 +1,5 @@
 import time
 
-from bluepy.btle import Scanner, DefaultDelegate
 from mqtt import MqttMessage
 
 from workers.base import BaseWorker
@@ -8,15 +7,6 @@ import logger
 
 REQUIREMENTS = ["bluepy"]
 _LOGGER = logger.get(__name__)
-
-
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
-
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
 
 class ToothbrushWorker(BaseWorker):
@@ -28,6 +18,16 @@ class ToothbrushWorker(BaseWorker):
         return None
 
     def status_update(self):
+        from bluepy.btle import Scanner, DefaultDelegate
+
+        class ScanDelegate(DefaultDelegate):
+            def __init__(self):
+                DefaultDelegate.__init__(self)
+
+            def handleDiscovery(self, dev, isNewDev, isNewData):
+                if isNewDev:
+                    _LOGGER.debug("Discovered new device: %s" % dev.addr)
+
         scanner = Scanner().withDelegate(ScanDelegate())
         devices = scanner.scan(5.0)
         ret = []

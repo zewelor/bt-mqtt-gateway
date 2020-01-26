@@ -1,7 +1,5 @@
-import time
 import json
 
-from bluepy.btle import Scanner, DefaultDelegate
 from mqtt import MqttMessage
 
 from workers.base import BaseWorker
@@ -50,15 +48,6 @@ BRUSHSECTORS = {
 }
 
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
-
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            _LOGGER.debug("Discovered new device: %s" % dev.addr)
-
-
 class Toothbrush_HomeassistantWorker(BaseWorker):
     def _setup(self):
         self.autoconfCache = {}
@@ -102,6 +91,16 @@ class Toothbrush_HomeassistantWorker(BaseWorker):
             return BRUSHSECTORS[255]
 
     def status_update(self):
+        from bluepy.btle import Scanner, DefaultDelegate
+
+        class ScanDelegate(DefaultDelegate):
+            def __init__(self):
+                DefaultDelegate.__init__(self)
+
+            def handleDiscovery(self, dev, isNewDev, isNewData):
+                if isNewDev:
+                    _LOGGER.debug("Discovered new device: %s" % dev.addr)
+
         scanner = Scanner().withDelegate(ScanDelegate())
         devices = scanner.scan(5.0)
         ret = []

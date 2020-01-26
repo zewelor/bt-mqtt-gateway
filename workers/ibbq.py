@@ -5,7 +5,6 @@ Thermometer sends every ~2sec the current temperature.
 
 """
 import struct
-from bluepy import btle
 
 from mqtt import MqttMessage
 from workers.base import BaseWorker
@@ -85,6 +84,8 @@ class ibbqThermometer:
         self.Setting_uuid.write(self.batteryLevel)
 
     def connect(self, timeout=5):
+        from bluepy import btle
+
         try:
             device = btle.Peripheral(self.mac)
             _LOGGER.debug("%s connected ", self.mac)
@@ -109,6 +110,35 @@ class ibbqThermometer:
         return bool(self.device)
 
     def subscribe(self, timeout=5):
+        from bluepy import btle
+
+        class MyDelegate(btle.DefaultDelegate):
+            def __init__(self, caller):
+                btle.DefaultDelegate.__init__(self)
+                self.caller = caller
+                _LOGGER.debug("init mydelegate")
+
+            def handleNotification(self, cHandle, data):
+                batMin = 0.95
+                batMax = 1.5
+                result = list()
+                #    safe = data
+                if cHandle == 37:
+                    if data[0] == 0x24:
+                        currentV = struct.unpack("<H", data[1:3])
+                        maxV = struct.unpack("<H", data[3:5])
+                        self.caller.batteryPct = int(
+                            100
+                            * ((batMax * currentV[0] / maxV[0] - batMin) / (batMax - batMin))
+                        )
+                else:
+                    while len(data) > 0:
+                        v, data = data[0:2], data[2:]
+                        result.append(struct.unpack("<H", v)[0] / 10)
+                    self.caller.values = result
+
+        #    _LOGGER.debug("called handler %s %s", cHandle, safe)
+
         if self.device is None:
             return
         try:
@@ -145,6 +175,8 @@ class ibbqThermometer:
         return self.device
 
     def update(self):
+        from bluepy import btle
+
         if not self.connected:
             return list()
         self.values = list()
@@ -175,30 +207,3 @@ class ibbqThermometer:
             return (self.batteryPct, self.values)
 
 
-class MyDelegate(btle.DefaultDelegate):
-    def __init__(self, caller):
-        btle.DefaultDelegate.__init__(self)
-        self.caller = caller
-        _LOGGER.debug("init mydelegate")
-
-    def handleNotification(self, cHandle, data):
-        batMin = 0.95
-        batMax = 1.5
-        result = list()
-        #    safe = data
-        if cHandle == 37:
-            if data[0] == 0x24:
-                currentV = struct.unpack("<H", data[1:3])
-                maxV = struct.unpack("<H", data[3:5])
-                self.caller.batteryPct = int(
-                    100
-                    * ((batMax * currentV[0] / maxV[0] - batMin) / (batMax - batMin))
-                )
-        else:
-            while len(data) > 0:
-                v, data = data[0:2], data[2:]
-                result.append(struct.unpack("<H", v)[0] / 10)
-            self.caller.values = result
-
-
-#    _LOGGER.debug("called handler %s %s", cHandle, safe)

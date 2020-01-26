@@ -1,8 +1,6 @@
 import json
 import logger
 
-from bluepy import btle
-from collections import namedtuple
 from contextlib import contextmanager
 from struct import unpack
 
@@ -55,6 +53,8 @@ class Lywsd02:
 
     @contextmanager
     def connected(self):
+        from bluepy import btle
+
         try:
             _LOGGER.debug("%s connected ", self.mac)
             device = btle.Peripheral()
@@ -72,7 +72,7 @@ class Lywsd02:
 
             temperature, humidity = self.getData(device)
             battery = self.getBattery(device)
-            
+
             _LOGGER.debug("successfully read %f, %d, %d", temperature, humidity, battery)
 
             return {
