@@ -153,8 +153,6 @@ class WorkersManager:
                     )
                 )
 
-        return self
-
     def start(self, mqtt):
         mqtt.callbacks_subscription(self._mqtt_callbacks)
 

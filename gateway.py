@@ -17,7 +17,6 @@ import argparse
 import queue
 
 from workers_queue import _WORKERS_QUEUE
-from config import settings
 from mqtt import MqttClient
 from workers_manager import WorkersManager
 
@@ -46,7 +45,23 @@ parser.add_argument(
     default=False,
     help="Suppress any errors regarding failed device updates",
 )
+parser.add_argument("-r", "--requirements", type=str, choices=['all', 'configured'],
+                    help="Print all or configured only required python libs")
 parsed = parser.parse_args()
+
+if parsed.requirements:
+    import workers_requirements
+
+    requirements = []
+    if parsed.requirements == 'configured':
+        requirements = workers_requirements.configured_workers()
+    else:
+        requirements = workers_requirements.all_workers()
+
+    print(' '.join(requirements))
+    exit(0)
+
+from config import settings
 
 _LOGGER = logger.get()
 if parsed.quiet:
@@ -64,7 +79,8 @@ global_topic_prefix = settings["mqtt"].get("topic_prefix")
 
 mqtt = MqttClient(settings["mqtt"])
 manager = WorkersManager(settings["manager"])
-manager.register_workers(global_topic_prefix).start(mqtt)
+manager.register_workers(global_topic_prefix)
+manager.start(mqtt)
 
 running = True
 
