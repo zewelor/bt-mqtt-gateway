@@ -53,9 +53,23 @@ source .venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
+All needed python libs, per each worker, should be auto installed on run. If now you can install them manually:
+
+```shell
+pip3 install `./gateway.py -r configured`
+```
+
 ### Docker
 There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
 Thanks @hobbypunk90 and @krasnoukhov for docker work.
+
+Mount config.yaml as /config.yaml volume
+
+Example exec
+
+```shell
+docker run -d --name bt-mqtt-gateway --network=host -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
+```
 
 ## Configuration
 

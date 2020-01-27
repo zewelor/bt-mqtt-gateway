@@ -1,37 +1,23 @@
-FROM alpine:3.8
-
-RUN mkdir application
-WORKDIR /application
-ADD . /application
-
-RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-libs musl-dev linux-headers gcc grep && \
-    python3 -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip3 install --upgrade pip setuptools && \
-    if [ ! -e /usr/bin/pip ]; then \
-      ln -s pip3 /usr/bin/pip ; \
-    fi && \
-    if [[ ! -e /usr/bin/python ]]; then \
-      ln -sf /usr/bin/python3 /usr/bin/python; \
-    fi && \
-    rm -r /root/.cache && \
-    mkdir /config && \
-    pip install -r requirements.txt && \
-    ln -s /config/config.yaml ./config.yaml && \
-    apk del --no-cache bluez-dev musl-dev gcc make git glib-dev linux-headers grep python2
-
-RUN apk add --no-cache tzdata python3 git bluez glib-dev make bluez-dev bluez-libs bluez-deprecated musl-dev linux-headers gcc grep sudo && \
-    grep -P "(?<=REQUIREMENTS).*" workers/*.py | grep -Po "(?<=\[).*(?=\])" | tr ',' '\n' | tr "'" " "| tr "\"" " " > /tmp/requirements.txt && \
-    cat /tmp/requirements.txt && \
-    pip install -r /tmp/requirements.txt && \
-    rm /tmp/requirements.txt && \
-    apk del --no-cache bluez-dev musl-dev gcc make git glib-dev linux-headers grep python2
-
-ADD ./start.sh /start.sh
-RUN chmod +x /start.sh
+FROM python:3.8-alpine3.11
 
 ENV DEBUG false
 
-VOLUME ["/config"]
+RUN mkdir application
+WORKDIR /application
+
+COPY requirements.txt /application
+
+RUN apk add --no-cache tzdata bluez bluez-libs sudo bluez-deprecated && \
+    ln -s /config.yaml ./config.yaml                                 && \
+    pip install -r requirements.txt
+
+COPY . /application
+
+RUN apk add --no-cache --virtual build-dependencies git bluez-dev musl-dev make gcc glib-dev musl-dev && \
+    pip install `./gateway.py -r all`                                                                 && \
+    apk del build-dependencies
+
+COPY ./start.sh /start.sh
+RUN chmod +x /start.sh
 
 ENTRYPOINT ["/bin/sh", "-c", "/start.sh"]

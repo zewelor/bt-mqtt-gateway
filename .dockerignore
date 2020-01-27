@@ -1,0 +1,8 @@
+/config.yaml
+Dockerfile*
+.git
+.idea
+.venv
+.github
+__pycache__
+__pycache__/*
