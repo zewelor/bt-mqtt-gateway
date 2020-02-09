@@ -218,8 +218,12 @@ class ThermostatWorker(BaseWorker):
         topic_without_prefix = topic.replace("{}/".format(self.topic_prefix), "")
         device_name, method, _ = topic_without_prefix.split("/")
 
-        data = self.devices[device_name]
-        thermostat = data["thermostat"]
+        if device_name in self.devices:
+            data = self.devices[device_name]
+            thermostat = data["thermostat"]
+        else:
+            logger.log_exception(_LOGGER, "Ignore command because device %s is unknown", device_name)
+            return []
 
         value = value.decode("utf-8")
         if method == "mode":
