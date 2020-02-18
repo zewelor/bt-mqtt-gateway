@@ -182,6 +182,9 @@ Variables set in args section will be set as object attributes in [BaseWorker.__
 
 topic_prefix, if specified, will be added to each mqtt message. Alongside with global_prefix set for gateway
 
+## Troubleshooting
+[Look at wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki/Troubleshooting)
+
 ## Built With
 
 * [Python](https://www.python.org/) - The high-level programming language for general-purpose programming
