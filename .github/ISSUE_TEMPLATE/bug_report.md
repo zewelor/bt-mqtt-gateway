@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Checklist **
+- [] I'm using bluez version minimum 5.50 ( if not upgrade [here](https://github.com/zewelor/bt-mqtt-gateway/wiki/Upgrade-Bluez-on-Raspbian) and try if bug still exists: 
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
