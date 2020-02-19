@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-[] I've looked at [Troubleshooting wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki/Troubleshooting) and my problem is not described there, or already using specified minimum bluez version.
+[] I've read the [Troubleshooting Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki/Troubleshooting), my problem is not described there and I am  already using the specified minimum bluez version.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
