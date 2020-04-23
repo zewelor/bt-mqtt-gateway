@@ -109,4 +109,4 @@ class lywsd03mmc:
 
         self._temperature = round(temperature, 1)
         self._humidity = round(humidity)
-        self._battery = round(humidity, 4)
+        self._battery = round(battery, 4)
