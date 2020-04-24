@@ -37,6 +37,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 * `python3` >= 3.5
 * `pip3`
+* `git`
 
 ## Installation
 
