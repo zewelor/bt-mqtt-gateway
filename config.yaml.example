@@ -131,3 +131,9 @@ manager:
           living_room:  00:11:22:33:44:55
         topic_prefix: mijasensor
       update_interval: 120
+    lywsd03mmc:
+      args:
+        devices:
+          bathroom:  00:11:22:33:44:55
+        topic_prefix: mijasensor_gen2
+      update_interval: 120
