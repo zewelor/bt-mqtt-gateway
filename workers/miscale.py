@@ -58,7 +58,7 @@ class MiscaleWorker(BaseWorker):
                     height = item["height"]
                     age = self.getAge(item["dob"])
 
-                    lib = bodyMetrics(results.weight, height, age, sex, 0)
+                    lib = bodyMetrics(results.weight, results.unit, height, age, sex, 0)
                     metrics = {
                         "weight": float("{:.2f}".format(results.weight)),
                         "bmi": float("{:.2f}".format(lib.getBMI())),
@@ -69,7 +69,7 @@ class MiscaleWorker(BaseWorker):
 
                     if results.impedance:
                         lib = bodyMetrics(
-                            results.weight, height, age, sex, int(results.impedance)
+                            results.weight, results.unit, height, age, sex, int(results.impedance)
                         )
                         metrics["impedance"] = results.impedance
                         metrics["lean_body_mass"] = float(
@@ -243,7 +243,11 @@ class MiWeightScaleData:
 
 
 class bodyMetrics:
-    def __init__(self, weight, height, age, sex, impedance):
+    def __init__(self, weight, unit, height, age, sex, impedance):
+        # Calculations need weight to be in kg, check unit and convert to kg if needed
+        if unit == "lbs"
+            weight = weight / 2.20462
+
         self.weight = weight
         self.height = height
         self.age = age
