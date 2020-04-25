@@ -245,7 +245,7 @@ class MiWeightScaleData:
 class bodyMetrics:
     def __init__(self, weight, unit, height, age, sex, impedance):
         # Calculations need weight to be in kg, check unit and convert to kg if needed
-        if unit == "lbs"
+        if unit == "lbs":
             weight = weight / 2.20462
 
         self.weight = weight
