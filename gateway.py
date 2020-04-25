@@ -19,6 +19,7 @@ import queue
 from workers_queue import _WORKERS_QUEUE
 from mqtt import MqttClient
 from workers_manager import WorkersManager
+from config import settings
 
 
 parser = argparse.ArgumentParser()
@@ -60,8 +61,6 @@ if parsed.requirements:
 
     print(' '.join(requirements))
     exit(0)
-
-from config import settings
 
 _LOGGER = logger.get()
 if parsed.quiet:

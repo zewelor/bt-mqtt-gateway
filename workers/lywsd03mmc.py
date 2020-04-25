@@ -1,4 +1,3 @@
-
 import json
 import logger
 
@@ -105,7 +104,7 @@ class lywsd03mmc:
     def handleNotification(self, handle, data):
         temperature = int.from_bytes(data[0:2], byteorder='little', signed=True) / 100
         humidity = int.from_bytes(data[2:3], byteorder='little')
-        battery =  int.from_bytes(data[3:5], byteorder='little') / 1000
+        battery = int.from_bytes(data[3:5], byteorder='little') / 1000
 
         self._temperature = round(temperature, 1)
         self._humidity = round(humidity)

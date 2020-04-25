@@ -14,6 +14,7 @@ from workers_queue import _WORKERS_QUEUE
 import logger
 
 from pip import __version__ as pip_version
+
 if LooseVersion(pip_version) >= LooseVersion("10"):
     if LooseVersion(pip_version) >= LooseVersion("19.3.1"):
         from pip._internal.main import main as pip_main
@@ -44,12 +45,12 @@ class WorkersManager:
 
             try:
                 with timeout(
-                    self._timeout,
-                    exception=WorkerTimeoutError(
-                        "Execution of command {} timed out after {} seconds".format(
-                            self._source, self._timeout
-                        )
-                    ),
+                        self._timeout,
+                        exception=WorkerTimeoutError(
+                            "Execution of command {} timed out after {} seconds".format(
+                                self._source, self._timeout
+                            )
+                        ),
                 ):
                     if inspect.isgeneratorfunction(self._callback):
                         for message in self._callback(*self._args):
@@ -112,7 +113,7 @@ class WorkersManager:
 
                 if "update_interval" in worker_config:
                     job_id = "{}_interval_job".format(worker_name)
-                    interval_job = self._scheduler.add_job(
+                    self._scheduler.add_job(
                         partial(self._queue_command, command),
                         "interval",
                         seconds=worker_config["update_interval"],
@@ -205,7 +206,7 @@ class WorkersManager:
         )
         global_topic_prefix = userdata["global_topic_prefix"]
         topic = (
-            c.topic[len(global_topic_prefix + "/") :]
+            c.topic[len(global_topic_prefix + "/"):]
             if global_topic_prefix is not None
             else c.topic
         )

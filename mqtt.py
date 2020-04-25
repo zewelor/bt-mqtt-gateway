@@ -96,6 +96,7 @@ class MqttClient:
     def mqttc(self):
         return self._mqttc
 
+    # noinspection PyUnusedLocal
     def on_connect(self, client, userdata, flags, rc):
         if self.availability_topic:
             self.publish(

@@ -1,6 +1,3 @@
-from builtins import staticmethod
-import logging
-
 from mqtt import MqttMessage, MqttConfigMessage
 
 from workers.base import BaseWorker

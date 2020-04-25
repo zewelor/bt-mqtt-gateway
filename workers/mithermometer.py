@@ -67,7 +67,7 @@ class MithermometerWorker(BaseWorker):
 
     def status_update(self):
         _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
-        ret = []
+
         for name, data in self.devices.items():
             _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
             from btlewrap import BluetoothBackendException
@@ -84,7 +84,7 @@ class MithermometerWorker(BaseWorker):
                     type(e).__name__,
                     suppress=True,
                 )
-            except DeviceTimeoutError as e:
+            except DeviceTimeoutError:
                 logger.log_exception(
                     _LOGGER,
                     "Time out during update of %s device '%s' (%s)",
