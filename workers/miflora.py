@@ -1,4 +1,4 @@
-from const import PER_DEVICE_TIMEOUT
+from const import DEFAULT_PER_DEVICE_TIMEOUT
 from exceptions import DeviceTimeoutError
 from mqtt import MqttMessage, MqttConfigMessage
 
@@ -129,7 +129,7 @@ class MifloraWorker(BaseWorker):
                     suppress=True,
                 )
 
-    @timeout(PER_DEVICE_TIMEOUT, DeviceTimeoutError)
+    @timeout(DEFAULT_PER_DEVICE_TIMEOUT, DeviceTimeoutError)
     def update_device_state(self, name, poller):
         ret = []
         poller.clear_cache()
