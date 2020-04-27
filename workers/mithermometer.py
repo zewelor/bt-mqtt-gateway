@@ -12,7 +12,7 @@ _LOGGER = logger.get(__name__)
 
 
 class MithermometerWorker(BaseWorker):
-    device_timeout = DEFAULT_PER_DEVICE_TIMEOUT  # type: int
+    per_device_timeout = DEFAULT_PER_DEVICE_TIMEOUT  # type: int
 
     def _setup(self):
         from mithermometer.mithermometer_poller import MiThermometerPoller
@@ -75,7 +75,7 @@ class MithermometerWorker(BaseWorker):
             from btlewrap import BluetoothBackendException
 
             try:
-                with timeout(self.device_timeout, exception=DeviceTimeoutError):
+                with timeout(self.per_device_timeout, exception=DeviceTimeoutError):
                     yield self.update_device_state(name, data["poller"])
             except BluetoothBackendException as e:
                 logger.log_exception(
