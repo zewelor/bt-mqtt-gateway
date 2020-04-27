@@ -72,6 +72,7 @@ manager:
         devices:
           living_room: 00:11:22:33:44:55
         topic_prefix: mithermometer
+        device_timeout: 6            # Optional override of globally set device_timeout.
       update_interval: 300
     blescanmulti:
       args:
