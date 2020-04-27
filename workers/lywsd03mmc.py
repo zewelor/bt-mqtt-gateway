@@ -26,7 +26,7 @@ class Lywsd03MmcWorker(BaseWorker):
             ret = lywsd03mmc.readAll()
 
             if not ret:
-                logger.debug("Error during update of %s device '%s'", repr(self), name)
+                _LOGGER.debug("Error during update of %s device '%s'", repr(self), name)
             else:
                 yield [MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))]
 
