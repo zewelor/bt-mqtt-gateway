@@ -29,7 +29,7 @@ class Lywsd02Worker(BaseWorker):
             if not ret:
                 logger.debug("Error during update of %s device '%s'", repr(self), name)
             else:
-                yield MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))
+                yield [MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))]
 
     def __repr__(self):
         return self.__module__.split(".")[-1]
