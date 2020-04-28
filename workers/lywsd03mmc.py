@@ -22,13 +22,33 @@ class Lywsd03MmcWorker(BaseWorker):
         return "/".join([self.topic_prefix, *args])
 
     def status_update(self):
+        from bluepy import btle
+
         for name, lywsd03mmc in self.devices.items():
             ret = lywsd03mmc.readAll()
 
-            if not ret:
-                _LOGGER.debug("Error during update of %s device '%s'", repr(self), name)
-            else:
-                yield [MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))]
+            try:
+                if not ret:
+                    _LOGGER.debug("Error during update of %s device '%s'", repr(self), name)
+                else:
+                    yield [MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))]
+            except btle.BluetoothBackendException as e:
+                logger.log_exception(
+                    _LOGGER,
+                    "Error during update of %s device '%s': %s",
+                    repr(self),
+                    name,
+                    type(e).__name__,
+                    suppress=True,
+                )
+            except btle.DeviceTimeoutError:
+                logger.log_exception(
+                    _LOGGER,
+                    "Time out during update of %s device '%s'",
+                    repr(self),
+                    name,
+                    suppress=True,
+                )
 
     def __repr__(self):
         return self.__module__.split(".")[-1]
