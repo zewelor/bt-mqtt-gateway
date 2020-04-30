@@ -1,11 +1,10 @@
 import json
 import logger
-
+import time
 from contextlib import contextmanager
 
 from mqtt import MqttMessage
 from workers.base import BaseWorker
-
 _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = ["bluepy"]
@@ -56,10 +55,10 @@ class Lywsd03MmcWorker(BaseWorker):
 
 class lywsd03mmc:
 
-    def __init__(self, mac, timeout=30):
+    def __init__(self, mac, timeout=30,maxattempt=4):
         self.mac = mac
         self.timeout = timeout
-
+        self.maxattempt = maxattempt 
         self._temperature = None
         self._humidity = None
         self._battery = None
@@ -67,18 +66,32 @@ class lywsd03mmc:
     @contextmanager
     def connected(self):
         from bluepy import btle
-
-        try:
-            _LOGGER.debug("%s connected ", self.mac)
-            device = btle.Peripheral()
-            device.connect(self.mac)
-            device.writeCharacteristic(0x0038, b'\x01\x00', True)
-            device.writeCharacteristic(0x0046, b'\xf4\x01\x00', True)
-            yield device
-            device.disconnect()
-        except btle.BTLEDisconnectError as er:
-            _LOGGER.debug("failed connect %s", er)
-            yield None
+        attempt = 1
+        while attempt < (self.maxattempt + 1) :
+            try:
+                device = btle.Peripheral()
+                _LOGGER.debug("trying to connect to %s", self.mac)
+                device.connect(self.mac)
+                _LOGGER.debug("connected to %s", self.mac)
+                device.writeCharacteristic(0x0038, b'\x01\x00', True)
+                device.writeCharacteristic(0x0046, b'\xf4\x01\x00', True)
+                _LOGGER.debug("%s query done ", self.mac)
+                yield device
+                device.disconnect()
+                _LOGGER.debug("%s is disconnected ", self.mac)
+                attempt = (self.maxattempt + 1)
+            except btle.BTLEDisconnectError as er:
+                _LOGGER.debug("failed to connect to %s : " + str(attempt) + "/" + str(self.maxattempt) + " attempt", self.mac)
+                if attempt == self.maxattempt :
+                    yield None
+                    pass
+                    return
+                else:
+                    attempt = attempt + 1
+                    _LOGGER.debug("waiting for next try...")
+                    time.sleep(5)
+                    pass
+                
 
     def readAll(self):
         with self.connected() as device:
