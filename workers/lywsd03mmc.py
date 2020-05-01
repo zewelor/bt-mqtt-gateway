@@ -33,9 +33,6 @@ class Lywsd03MmcWorker(BaseWorker):
             else:
                 yield [MqttMessage(topic=self.format_topic(name), payload=json.dumps(ret))]
 
-    def __repr__(self):
-        return self.__module__.split(".")[-1]
-
 
 class lywsd03mmc:
 

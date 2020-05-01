@@ -34,9 +34,6 @@ class Lywsd02Worker(BaseWorker):
             else:
                 yield [MqttMessage(topic=self.format_topic(name), payload=json.dumps(ret))]
 
-    def __repr__(self):
-        return self.__module__.split(".")[-1]
-
 
 class Lywsd02:
     UUID_DATA = "ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6"
