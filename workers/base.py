@@ -71,3 +71,13 @@ class BaseWorker:
             type(exception).__name__,
             suppress=True,
         )
+
+    def log_unspecified_exception(self, named_logger, dev_name, exception):
+        logger.log_exception(
+            named_logger,
+            "Failed btle from %s to device '%s': %s",
+            repr(self),
+            dev_name,
+            type(exception).__name__,
+            suppress=True,
+        )

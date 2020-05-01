@@ -25,10 +25,10 @@ class Lywsd02Worker(BaseWorker):
         for name, lywsd02 in self.devices.items():
             try:
                 ret = lywsd02.readAll()
-            except btle.DeviceTimeoutError:
-                self.log_timeout_exception(_LOGGER, name)
             except btle.BTLEDisconnectError as e:
                 self.log_connect_exception(_LOGGER, name, e)
+            except btle.BTLEException as e:
+                self.log_unspecified_exception(_LOGGER, name, e)
             else:
                 yield [MqttMessage(topic=self.format_topic(name), payload=json.dumps(ret))]
 
