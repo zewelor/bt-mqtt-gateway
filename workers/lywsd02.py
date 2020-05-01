@@ -25,8 +25,6 @@ class Lywsd02Worker(BaseWorker):
         for name, lywsd02 in self.devices.items():
             try:
                 ret = lywsd02.readAll()
-            except btle.BluetoothBackendException as e:
-                self.log_update_exception(_LOGGER, name, e)
             except btle.DeviceTimeoutError:
                 self.log_timeout_exception(_LOGGER, name)
             except btle.BTLEDisconnectError as e:
