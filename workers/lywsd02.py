@@ -19,37 +19,20 @@ class Lywsd02Worker(BaseWorker):
             _LOGGER.info("Adding %s device '%s' (%s)", repr(self), name, mac)
             self.devices[name] = Lywsd02(mac, timeout=self.command_timeout)
 
-    def format_static_topic(self, *args):
-        return "/".join([self.topic_prefix, *args])
-
     def status_update(self):
         from bluepy import btle
 
         for name, lywsd02 in self.devices.items():
-            ret = lywsd02.readAll()
-
             try:
-                if not ret:
-                    _LOGGER.debug("Error during update of %s device '%s'", repr(self), name)
-                else:
-                    yield [MqttMessage(topic=self.format_static_topic(name), payload=json.dumps(ret))]
+                ret = lywsd02.readAll()
             except btle.BluetoothBackendException as e:
-                logger.log_exception(
-                    _LOGGER,
-                    "Error during update of %s device '%s': %s",
-                    repr(self),
-                    name,
-                    type(e).__name__,
-                    suppress=True,
-                )
+                self.log_update_exception(_LOGGER, name, e)
             except btle.DeviceTimeoutError:
-                logger.log_exception(
-                    _LOGGER,
-                    "Time out during update of %s device '%s'",
-                    repr(self),
-                    name,
-                    suppress=True,
-                )
+                self.log_timeout_exception(_LOGGER, name)
+            except btle.BTLEDisconnectError as e:
+                self.log_connect_exception(_LOGGER, name, e)
+            else:
+                yield [MqttMessage(topic=self.format_topic(name), payload=json.dumps(ret))]
 
     def __repr__(self):
         return self.__module__.split(".")[-1]
@@ -71,21 +54,14 @@ class Lywsd02:
     def connected(self):
         from bluepy import btle
 
-        try:
-            _LOGGER.debug("%s connected ", self.mac)
-            device = btle.Peripheral()
-            device.connect(self.mac)
-            yield device
-            device.disconnect()
-        except btle.BTLEDisconnectError as er:
-            _LOGGER.debug("failed connect %s", er)
-            yield None
+        _LOGGER.debug("%s connected ", self.mac)
+        device = btle.Peripheral()
+        device.connect(self.mac)
+        yield device
+        device.disconnect()
 
     def readAll(self):
         with self.connected() as device:
-            if not device:
-                return {}
-
             temperature, humidity = self.getData(device)
             battery = self.getBattery(device)
 
