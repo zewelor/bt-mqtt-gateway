@@ -1,3 +1,5 @@
+import logger
+
 class BaseWorker:
     def __init__(self, command_timeout, global_topic_prefix, **kwargs):
         self.command_timeout = command_timeout
@@ -41,4 +43,41 @@ class BaseWorker:
 
         return 'OFF'
 
+    def log_update_exception(self, named_logger, dev_name, exception):
+        logger.log_exception(
+            named_logger,
+            "Error during update of %s device '%s': %s",
+            repr(self),
+            dev_name,
+            type(exception).__name__,
+            suppress=True,
+        )
 
+    def log_timeout_exception(self, named_logger, dev_name):
+        logger.log_exception(
+            named_logger,
+            "Time out during update of %s device '%s'",
+            repr(self),
+            dev_name,
+            suppress=True,
+        )
+
+    def log_connect_exception(self, named_logger, dev_name, exception):
+        logger.log_exception(
+            named_logger,
+            "Failed connect from %s to device '%s': %s",
+            repr(self),
+            dev_name,
+            type(exception).__name__,
+            suppress=True,
+        )
+
+    def log_unspecified_exception(self, named_logger, dev_name, exception):
+        logger.log_exception(
+            named_logger,
+            "Failed btle from %s to device '%s': %s",
+            repr(self),
+            dev_name,
+            type(exception).__name__,
+            suppress=True,
+        )
