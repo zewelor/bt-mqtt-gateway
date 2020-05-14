@@ -47,7 +47,7 @@ The following example shows the installation under Debian/Raspbian:
 
 ```shell
 sudo apt-get install git python3 python3-pip python3-wheel bluetooth bluez libglib2.0-dev
-pip3 install virtualenv
+sudo pip3 install virtualenv
 git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
 virtualenv -p python3 .venv
