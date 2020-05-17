@@ -58,7 +58,7 @@ class MiscaleWorker(BaseWorker):
                     height = item["height"]
                     age = self.getAge(item["dob"])
 
-                    lib = bodyMetrics(results.weight, results.unit, height, age, sex, 0)
+                    lib = bodyMetrics(results.weight, results.unit, height, age, sex, results.impedance)
                     metrics = {
                         "weight": float("{:.2f}".format(results.weight)),
                         "bmi": float("{:.2f}".format(lib.getBMI())),
@@ -67,11 +67,8 @@ class MiscaleWorker(BaseWorker):
                         "user": user,
                     }
 
-                    if results.impedance:
-                        lib = bodyMetrics(
-                            results.weight, results.unit, height, age, sex, int(results.impedance)
-                        )
-                        metrics["impedance"] = results.impedance
+                    if lib.is_impedance_value_valid():
+                        metrics["impedance"] = lib.impedance
                         metrics["lean_body_mass"] = float(
                             "{:.2f}".format(lib.getLBMCoefficient())
                         )
@@ -263,8 +260,12 @@ class bodyMetrics:
             )
         elif age > 99:
             raise Exception("Age is too high (limit >99 years)")
-        elif impedance > 3000:
-            raise Exception("Impedance is too high (limit >3000ohm)")
+
+    def is_impedance_value_valid(self):
+        # Impedance could be 0 if someone gets off the MiScale just after the weight measurement, but before the
+        # impedance measurement. Impedance could be high value (usually 65533), for example when someone
+        # is not barefoot.
+        return isinstance(self.impedance, int) and 0 < self.impedance <= 3000
 
     # Set the value to a boundary if it overflows
     def checkValueOverflow(self, value, minimum, maximum):
@@ -277,6 +278,9 @@ class bodyMetrics:
 
     # Get LBM coefficient (with impedance)
     def getLBMCoefficient(self):
+        if not self.is_impedance_value_valid():
+            raise Exception("Impedance is not valid, LBM could not be calculated.")
+
         lbm = (self.height * 9.058 / 100) * (self.height / 100)
         lbm += self.weight * 0.32 + 12.226
         lbm -= self.impedance * 0.0068
