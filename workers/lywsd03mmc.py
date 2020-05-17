@@ -18,24 +18,18 @@ class Lywsd03MmcWorker(BaseWorker):
             _LOGGER.info("Adding %s device '%s' (%s)", repr(self), name, mac)
             self.devices[name] = lywsd03mmc(mac, timeout=self.command_timeout)
 
-    def format_static_topic(self, *args):
-        return "/".join([self.topic_prefix, *args])
-
     def status_update(self):
+        from bluepy import btle
+
         for name, lywsd03mmc in self.devices.items():
-            ret = lywsd03mmc.readAll()
-
-            if not ret:
-                return []
-
-            return [
-                MqttMessage(
-                    topic=self.format_static_topic(name), payload=json.dumps(ret)
-                )
-            ]
-
-    def __repr__(self):
-        return self.__module__.split(".")[-1]
+            try:
+                ret = lywsd03mmc.readAll()
+            except btle.BTLEDisconnectError as e:
+                self.log_connect_exception(_LOGGER, name, e)
+            except btle.BTLEException as e:
+                self.log_unspecified_exception(_LOGGER, name, e)
+            else:
+                yield [MqttMessage(topic=self.format_topic(name), payload=json.dumps(ret))]
 
 
 class lywsd03mmc:
@@ -52,23 +46,15 @@ class lywsd03mmc:
     def connected(self):
         from bluepy import btle
 
-        try:
-            _LOGGER.debug("%s connected ", self.mac)
-            device = btle.Peripheral()
-            device.connect(self.mac)
-            device.writeCharacteristic(0x0038, b'\x01\x00', True)
-            device.writeCharacteristic(0x0046, b'\xf4\x01\x00', True)
-            yield device
-            device.disconnect()
-        except btle.BTLEDisconnectError as er:
-            _LOGGER.debug("failed connect %s", er)
-            yield None
+        _LOGGER.debug("%s connected ", self.mac)
+        device = btle.Peripheral()
+        device.connect(self.mac)
+        device.writeCharacteristic(0x0038, b'\x01\x00', True)
+        device.writeCharacteristic(0x0046, b'\xf4\x01\x00', True)
+        yield device
 
     def readAll(self):
         with self.connected() as device:
-            if not device:
-                return {}
-
             self.getData(device)
             temperature = self.getTemperature()
             humidity = self.getHumidity()

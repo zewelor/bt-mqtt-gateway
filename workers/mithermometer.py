@@ -1,4 +1,4 @@
-from const import PER_DEVICE_TIMEOUT
+from const import DEFAULT_PER_DEVICE_TIMEOUT
 from exceptions import DeviceTimeoutError
 from mqtt import MqttMessage, MqttConfigMessage
 from interruptingcow import timeout
@@ -12,6 +12,8 @@ _LOGGER = logger.get(__name__)
 
 
 class MithermometerWorker(BaseWorker):
+    per_device_timeout = DEFAULT_PER_DEVICE_TIMEOUT  # type: int
+
     def _setup(self):
         from mithermometer.mithermometer_poller import MiThermometerPoller
         from btlewrap.bluepy import BluepyBackend
@@ -73,7 +75,8 @@ class MithermometerWorker(BaseWorker):
             from btlewrap import BluetoothBackendException
 
             try:
-                yield self.update_device_state(name, data["poller"])
+                with timeout(self.per_device_timeout, exception=DeviceTimeoutError):
+                    yield self.update_device_state(name, data["poller"])
             except BluetoothBackendException as e:
                 logger.log_exception(
                     _LOGGER,
@@ -94,7 +97,6 @@ class MithermometerWorker(BaseWorker):
                     suppress=True,
                 )
 
-    @timeout(PER_DEVICE_TIMEOUT, DeviceTimeoutError)
     def update_device_state(self, name, poller):
         ret = []
         poller.clear_cache()
