@@ -52,7 +52,7 @@ git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
 virtualenv -p python3 .venv
 source .venv/bin/activate
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 ```
 
 All needed python libs, per each worker, should be auto installed on run. If now you can install them manually:
