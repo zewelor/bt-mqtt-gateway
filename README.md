@@ -33,13 +33,20 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-### Prerequisites
-
-* `python3` >= 3.5
-* `pip3`
-* `git`
-
 ## Installation
+
+### Docker
+There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
+Thanks @hobbypunk90 and @krasnoukhov for docker work.
+
+Mount config.yaml as /config.yaml volume
+
+Example exec
+
+```shell
+docker run -d --name bt-mqtt-gateway --network=host -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
+```
+
 
 ### Virtualenv
 On a modern Linux system, just a few steps are needed to get the gateway working.
@@ -59,18 +66,6 @@ All needed python libs, per each worker, should be auto installed on run. If now
 
 ```shell
 pip3 install `./gateway.py -r configured`
-```
-
-### Docker
-There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
-Thanks @hobbypunk90 and @krasnoukhov for docker work.
-
-Mount config.yaml as /config.yaml volume
-
-Example exec
-
-```shell
-docker run -d --name bt-mqtt-gateway --network=host -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
 ```
 
 ## Configuration
