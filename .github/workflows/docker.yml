@@ -1,0 +1,26 @@
+name: Build and push
+
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: install buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          buildx-version: latest
+      - name: login to docker hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+        shell: bash
+      - name: build the image
+        run: |
+          docker buildx build --push \
+            --tag "${{ secrets.DOCKER_USERNAME }}"/${REPOSITORY_NAME}:latest \
+            --platform linux/amd64,linux/arm/v7,linux/arm64 .
