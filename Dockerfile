@@ -8,6 +8,7 @@ WORKDIR /application
 COPY requirements.txt /application
 
 RUN apk add --no-cache tzdata bluez bluez-libs sudo bluez-deprecated && \
+    ln -s /config.yaml ./config.yaml                                 && \
     pip install -r requirements.txt
 
 COPY . /application
