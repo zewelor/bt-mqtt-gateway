@@ -41,7 +41,13 @@ These instructions will get you a copy of the project up and running on your loc
 **Testing mqtt:**
 Use mosquitto_sub to print all messages. Change localhost to your mqtt server address.
 ```
-mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
+# also helpful for testing MQTT messages
+mosquitto_sub -h localhost -d -t '#'
+
+# if user/password are defined on your mosquitto server, use
+mosquitto_sub -h localhost -d -t '#' -u user -P password
+
+# for more info, see mosquitto_sub --help
 ```
 
 
