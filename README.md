@@ -33,6 +33,18 @@ See [Wiki](https://github.com/zewelor/bt-mqtt-gateway/wiki) for more information
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
+### Requirements
+- Python 3 installed
+- Working bluetooth adapter ( might be built in like in raspberry pi )
+- Working mqtt server, to which you can connect
+
+**Testing mqtt:**
+Use mosquitto_sub to print all messages. Change localhost to your mqtt server address.
+```
+mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
+```
+
+
 ## Installation
 
 ### Docker
@@ -126,12 +138,6 @@ sudo systemctl enable bt-mqtt-gateway
 
 **Attention:**
 You need to define the absolute path of `service.sh` in `bt-mqtt-gateway.service`.
-
-**Testing mqtt:**
-Use mosquitto_sub to print all messages
-```
-mosquitto_sub -h localhost -d -t # command also help for me to test MQTT messages
-```
 
 **Dynamically Changing the Update Interval**
 To dynamically change the `update_interval` of a worker, publish a message containing the new interval in seconds at the `update_interval` topic. Note that the `update_interval` will revert back to the value in `config.yaml` when the gateway is restarted.
