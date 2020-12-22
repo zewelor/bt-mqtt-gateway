@@ -5,6 +5,9 @@ services:
     image: zewelor/bt-mqtt-gateway
     container_name: bt-mqtt-gateway
     restart: always
+    # Uncomment to enable debug
+    #environment:
+    #  - DEBUG=true
     volumes:
       - ./config.yaml:/config.yaml
     cap_add:
