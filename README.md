@@ -44,9 +44,16 @@ Mount config.yaml as /config.yaml volume
 Example exec
 
 ```shell
-docker run -d --name bt-mqtt-gateway --network=host -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
+docker run -d --name bt-mqtt-gateway --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
 ```
 
+#### Docker-compose
+
+See docker-compose.yml file in repo. To run:
+
+```shell
+docker-compose run bt-mqtt-gateway
+```
 
 ### Virtualenv
 On a modern Linux system, just a few steps are needed to get the gateway working.

@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  bt-mqtt-gateway:
+    image: zewelor/bt-mqtt-gateway
+    container_name: bt-mqtt-gateway
+    restart: always
+    volumes:
+      - ./config.yaml:/config.yaml
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host
