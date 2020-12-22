@@ -16,6 +16,7 @@ import logging
 import argparse
 import queue
 
+import workers_requirements
 from workers_queue import _WORKERS_QUEUE
 from mqtt import MqttClient
 from workers_manager import WorkersManager
@@ -50,8 +51,6 @@ parser.add_argument("-r", "--requirements", type=str, choices=['all', 'configure
 parsed = parser.parse_args()
 
 if parsed.requirements:
-    import workers_requirements
-
     requirements = []
     if parsed.requirements == 'configured':
         requirements = workers_requirements.configured_workers()
@@ -74,6 +73,8 @@ else:
 logger.suppress_update_failures(parsed.suppress)
 
 _LOGGER.info("Starting")
+
+workers_requirements.verify()
 
 global_topic_prefix = settings["mqtt"].get("topic_prefix")
 

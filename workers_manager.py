@@ -2,7 +2,6 @@ import importlib
 import inspect
 import threading
 from functools import partial
-from distutils.version import LooseVersion
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
@@ -12,16 +11,6 @@ from const import DEFAULT_COMMAND_TIMEOUT
 from exceptions import WorkerTimeoutError
 from workers_queue import _WORKERS_QUEUE
 import logger
-
-from pip import __version__ as pip_version
-
-if LooseVersion(pip_version) >= LooseVersion("10"):
-    if LooseVersion(pip_version) >= LooseVersion("19.3.1"):
-        from pip._internal.main import main as pip_main
-    else:
-        from pip._internal import main as pip_main
-else:
-    from pip import main as pip_main
 
 _LOGGER = logger.get(__name__)
 
@@ -81,9 +70,6 @@ class WorkersManager:
         for (worker_name, worker_config) in self._config["workers"].items():
             module_obj = importlib.import_module("workers.%s" % worker_name)
             klass = getattr(module_obj, "%sWorker" % worker_name.title())
-
-            if module_obj.REQUIREMENTS is not None:
-                self._pip_install_helper(module_obj.REQUIREMENTS)
 
             command_timeout = worker_config.get(
                 "command_timeout", self._command_timeout
@@ -177,12 +163,6 @@ class WorkersManager:
     @staticmethod
     def _queue_command(command):
         _WORKERS_QUEUE.put(command)
-
-    @staticmethod
-    def _pip_install_helper(package_names):
-        for package in package_names:
-            pip_main(["install", "-q", package])
-        logger.reset()
 
     def _update_interval_wrapper(self, command, job_id, client, userdata, c):
         _LOGGER.info("Recieved updated interval for %s with: %s", c.topic, c.payload)
