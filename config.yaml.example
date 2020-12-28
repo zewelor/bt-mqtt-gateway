@@ -139,7 +139,7 @@ manager:
           bathroom:  00:11:22:33:44:55
         topic_prefix: mijasensor_gen2
       update_interval: 120
-      passive: false
+      passive: false            # Only for sensors running custom firmware and advertising type custom.
     lywsd03mmc_homeassistant:
       args:
         devices:
