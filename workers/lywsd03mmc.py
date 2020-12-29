@@ -10,16 +10,33 @@ _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = ["bluepy"]
 
-
 class Lywsd03MmcWorker(BaseWorker):
     def _setup(self):
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
+
         for name, mac in self.devices.items():
             _LOGGER.info("Adding %s device '%s' (%s)", repr(self), name, mac)
-            self.devices[name] = lywsd03mmc(mac, timeout=self.command_timeout)
+            self.devices[name] = lywsd03mmc(mac, timeout=self.command_timeout, passive=self.passive)
+
+    def find_device(self, mac):
+        for name, device in self.devices.items():
+            if device.mac == mac:
+                return device
+        return
 
     def status_update(self):
         from bluepy import btle
+
+        if self.passive:
+            scanner = btle.Scanner()
+            results = scanner.scan(10.0, passive=True)
+
+            for res in results:
+                device = self.find_device(res.addr)
+                if device:
+                    for (adtype, desc, value) in res.getScanData():
+                        if ("1a18" in value):
+                            device.processScanValue(value)
 
         for name, lywsd03mmc in self.devices.items():
             try:
@@ -33,9 +50,9 @@ class Lywsd03MmcWorker(BaseWorker):
 
 
 class lywsd03mmc:
-
-    def __init__(self, mac, timeout=30):
+    def __init__(self, mac, timeout=30, passive=False):
         self.mac = mac
+        self.passive = passive
         self.timeout = timeout
 
         self._temperature = None
@@ -54,19 +71,24 @@ class lywsd03mmc:
         yield device
 
     def readAll(self):
-        with self.connected() as device:
-            self.getData(device)
+        if self.passive:
             temperature = self.getTemperature()
             humidity = self.getHumidity()
             battery = self.getBattery()
+        else:
+            with self.connected() as device:
+                self.getData(device)
+                temperature = self.getTemperature()
+                humidity = self.getHumidity()
+                battery = self.getBattery()
 
-            _LOGGER.debug("successfully read %f, %d, %d", temperature, humidity, battery)
+        _LOGGER.debug("successfully read %f, %d, %d", temperature, humidity, battery)
 
-            return {
-                "temperature": temperature,
-                "humidity": humidity,
-                "battery": battery,
-            }
+        return {
+            "temperature": temperature,
+            "humidity": humidity,
+            "battery": battery,
+        }
 
     def getData(self, device):
         self.subscribe(device)
@@ -86,6 +108,15 @@ class lywsd03mmc:
 
     def subscribe(self, device):
         device.setDelegate(self)
+
+    def processScanValue(self, data):
+        temperature = int(data[16:20], 16) / 10
+        humidity = int(data[20:22], 16)
+        battery = int(data[22:24], 16)
+
+        self._temperature = round(temperature, 1)
+        self._humidity = round(humidity)
+        self._battery = round(battery, 4)
 
     def handleNotification(self, handle, data):
         temperature = int.from_bytes(data[0:2], byteorder='little', signed=True) / 100
