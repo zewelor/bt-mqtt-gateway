@@ -29,7 +29,7 @@ class Lywsd03MmcWorker(BaseWorker):
 
         if self.passive:
             scanner = btle.Scanner()
-            results = scanner.scan(self.scan_timeout or 20.0, passive=True)
+            results = scanner.scan(self.scan_timeout if hasattr(self, 'scan_timeout') else 20.0, passive=True)
 
             for res in results:
                 device = self.find_device(res.addr)
