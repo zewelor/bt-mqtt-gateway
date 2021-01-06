@@ -139,6 +139,9 @@ manager:
           bathroom:  00:11:22:33:44:55
         topic_prefix: mijasensor_gen2
         passive: false            # Set to true for sensors running custom firmware and advertising type custom. See https://github.com/zewelor/bt-mqtt-gateway/wiki/Devices#lywsd03mmc
+        command_timeout: 30       # Optional timeout for getting data for non-passive readouts
+        scan_timeout: 20          # Optional timeout for passive scanning
+        
       update_interval: 120
     lywsd03mmc_homeassistant:
       args:

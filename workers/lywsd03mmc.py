@@ -16,7 +16,7 @@ class Lywsd03MmcWorker(BaseWorker):
 
         for name, mac in self.devices.items():
             _LOGGER.info("Adding %s device '%s' (%s)", repr(self), name, mac)
-            self.devices[name] = lywsd03mmc(mac, timeout=self.command_timeout, passive=self.passive)
+            self.devices[name] = lywsd03mmc(mac, command_timeout=self.command_timeout, passive=self.passive)
 
     def find_device(self, mac):
         for name, device in self.devices.items():
@@ -29,13 +29,14 @@ class Lywsd03MmcWorker(BaseWorker):
 
         if self.passive:
             scanner = btle.Scanner()
-            results = scanner.scan(10.0, passive=True)
+            results = scanner.scan(self.scan_timeout or 20.0, passive=True)
 
             for res in results:
                 device = self.find_device(res.addr)
                 if device:
                     for (adtype, desc, value) in res.getScanData():
                         if ("1a18" in value):
+                            _LOGGER.debug("%s - received scan data %s", res.addr, value)
                             device.processScanValue(value)
 
         for name, lywsd03mmc in self.devices.items():
@@ -50,10 +51,10 @@ class Lywsd03MmcWorker(BaseWorker):
 
 
 class lywsd03mmc:
-    def __init__(self, mac, timeout=30, passive=False):
+    def __init__(self, mac, command_timeout=30, passive=False):
         self.mac = mac
         self.passive = passive
-        self.timeout = timeout
+        self.timeout = command_timeout
 
         self._temperature = None
         self._humidity = None
@@ -63,7 +64,7 @@ class lywsd03mmc:
     def connected(self):
         from bluepy import btle
 
-        _LOGGER.debug("%s connected ", self.mac)
+        _LOGGER.debug("%s - connected ", self.mac)
         device = btle.Peripheral()
         device.connect(self.mac)
         device.writeCharacteristic(0x0038, b'\x01\x00', True)
@@ -82,7 +83,10 @@ class lywsd03mmc:
                 humidity = self.getHumidity()
                 battery = self.getBattery()
 
-        _LOGGER.debug("successfully read %f, %d, %d", temperature, humidity, battery)
+        if temperature and humidity and battery:
+            _LOGGER.debug("%s - found values %f, %d, %d", self.mac, temperature, humidity, battery)
+        else:
+            _LOGGER.debug("%s - no data received", self.mac)
 
         return {
             "temperature": temperature,
@@ -93,7 +97,7 @@ class lywsd03mmc:
     def getData(self, device):
         self.subscribe(device)
         while True:
-            if device.waitForNotifications(self.timeout):
+            if device.waitForNotifications(self.command_timeout):
                 break
         return self._temperature, self._humidity, self._battery
 
