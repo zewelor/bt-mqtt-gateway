@@ -149,3 +149,14 @@ manager:
           bathroom:  00:11:22:33:44:55
         topic_prefix: mijasensor_gen2
       update_interval: 120
+    am43:
+      args:
+        devices:
+          upper_hall: 
+            mac: 00:11:22:33:44:55
+            pin: 8888           # Pin code for the device
+            invert: true        # Set to true to make position 100 be open instead of the default of closed
+        topic_prefix: blinds
+        per_device_timeout: 40
+      topic_subscription: blinds/+/+/+
+      update_interval: 300
