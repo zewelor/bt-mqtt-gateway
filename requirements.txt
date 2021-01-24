@@ -2,3 +2,4 @@ paho-mqtt
 pyyaml
 interruptingcow
 apscheduler
+tenacity

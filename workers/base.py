@@ -1,8 +1,18 @@
 import logger
 
+import functools
+import logging
+
+import tenacity
+
+_LOGGER = logger.get(__name__)
+
+
 class BaseWorker:
-    def __init__(self, command_timeout, global_topic_prefix, **kwargs):
+    def __init__(self, command_timeout, command_retries, update_retries, global_topic_prefix, **kwargs):
         self.command_timeout = command_timeout
+        self.command_retries = command_retries
+        self.update_retries = update_retries
         self.global_topic_prefix = global_topic_prefix
         for arg, value in kwargs.items():
             setattr(self, arg, value)
@@ -81,3 +91,29 @@ class BaseWorker:
             type(exception).__name__,
             suppress=True,
         )
+
+def retry(_func=None, *, retries=0, exception_type=Exception):
+    def log_retry(retry_state):
+        _LOGGER.info(
+                'Call to %s failed the %s time (%s). Retrying in %s seconds',
+                '.'.join((retry_state.fn.__module__, retry_state.fn.__name__)),
+                retry_state.attempt_number,
+                type(retry_state.outcome.exception()).__name__,
+                '{:.2f}'.format(getattr(retry_state.next_action, 'sleep')))
+
+    def decorator_retry(func):
+        @functools.wraps(func)
+        def wrapped_retry(*args, **kwargs):
+            retryer = tenacity.Retrying(
+                    wait=tenacity.wait_random(1, 3),
+                    retry=tenacity.retry_if_exception_type(exception_type),
+                    stop=tenacity.stop_after_attempt(retries+1),
+                    reraise=True,
+                    before_sleep=log_retry)
+            return retryer(func, *args, **kwargs)
+        return wrapped_retry
+
+    if _func:
+        return decorator_retry(_func)
+    else:
+        return decorator_retry

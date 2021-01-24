@@ -45,7 +45,7 @@ def suppress_update_failures(suppress):
 
 
 def log_exception(logger, message, *args, **kwargs):
-    if not ("suppress" in kwargs and kwargs.pop("suppress") and SUPPRESSION_ENABLED):
+    if not (kwargs.pop('suppress', False) and SUPPRESSION_ENABLED):
         if logger.isEnabledFor(logging.DEBUG):
             logger.exception(message, *args, **kwargs)
         elif logger.isEnabledFor(logging.WARNING):
