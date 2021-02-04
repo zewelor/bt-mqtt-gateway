@@ -3,8 +3,6 @@ name: Build and push
 on:
   push:
     branches: master
-  pull_request_target:
-    branches: [ master ]
 
 jobs:
   build:
