@@ -31,7 +31,6 @@ jobs:
           esac
           echo $VERSION
           [ "$VERSION" == "master" ] && VERSION=latest
-          echo $VERSION
-#          docker buildx build --push \
-#            --tag "${{ secrets.DOCKER_USERNAME }}"/${REPOSITORY_NAME}:${VERSION} \
-#            --platform linux/amd64,linux/arm/v7,linux/arm64 .
+          docker buildx build --push \
+            --tag "${{ secrets.DOCKER_USERNAME }}"/${REPOSITORY_NAME}:${VERSION} \
+            --platform linux/amd64,linux/arm/v7,linux/arm64 .
