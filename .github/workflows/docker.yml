@@ -3,6 +3,8 @@ name: Build and push
 on:
   push:
     branches: master
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
@@ -21,6 +23,10 @@ jobs:
         shell: bash
       - name: build the image
         run: |
-          docker buildx build --push \
-            --tag "${{ secrets.DOCKER_USERNAME }}"/${REPOSITORY_NAME}:latest \
-            --platform linux/amd64,linux/arm/v7,linux/arm64 .
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [ "$VERSION" == "master" ] && VERSION=latest
+          echo $VERSION
+#          docker buildx build --push \
+#            --tag "${{ secrets.DOCKER_USERNAME }}"/${REPOSITORY_NAME}:${VERSION} \
+#            --platform linux/amd64,linux/arm/v7,linux/arm64 .
