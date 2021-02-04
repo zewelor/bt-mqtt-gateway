@@ -23,8 +23,13 @@ jobs:
         shell: bash
       - name: build the image
         run: |
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          case $GITHUB_REF in
+            refs/tags/*)  VERSION=${GITHUB_REF#refs/tags/};;
+            refs/heads/*) VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g');;
+            refs/pull/*)  VERSION=pr-${{ github.event.number }};;
+            *)            VERSION=sha-${GITHUB_SHA::8};;
+          esac
+          echo $VERSION
           [ "$VERSION" == "master" ] && VERSION=latest
           echo $VERSION
 #          docker buildx build --push \
