@@ -3,7 +3,7 @@ from exceptions import DeviceTimeoutError
 from mqtt import MqttMessage, MqttConfigMessage
 from interruptingcow import timeout
 
-from workers.base import BaseWorker
+from workers.base import BaseWorker, retry
 import logger
 
 REQUIREMENTS = ["mithermometer==0.1.4", "bluepy"]
@@ -76,7 +76,7 @@ class MithermometerWorker(BaseWorker):
 
             try:
                 with timeout(self.per_device_timeout, exception=DeviceTimeoutError):
-                    yield self.update_device_state(name, data["poller"])
+                    yield retry(self.update_device_state, retries=self.update_retries, exception_type=BluetoothBackendException)(name, data["poller"])
             except BluetoothBackendException as e:
                 logger.log_exception(
                     _LOGGER,

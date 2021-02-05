@@ -1,6 +1,6 @@
 from mqtt import MqttMessage, MqttConfigMessage
 
-from workers.base import BaseWorker
+from workers.base import BaseWorker, retry
 import logger
 
 REQUIREMENTS = ["python-eq3bt==0.1.11"]
@@ -192,7 +192,7 @@ class ThermostatWorker(BaseWorker):
             _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
             thermostat = data["thermostat"]
             try:
-                thermostat.update()
+                retry(thermostat.update, retries=self.update_retries, exception_type=btle.BTLEException)()
             except btle.BTLEException as e:
                 logger.log_exception(
                     _LOGGER,
@@ -204,7 +204,7 @@ class ThermostatWorker(BaseWorker):
                     suppress=True,
                 )
             else:
-                yield self.present_device_state(name, thermostat)
+                yield retry(self.present_device_state, retries=self.update_retries, exception_type=btle.BTLEException)(name, thermostat)
 
     def on_command(self, topic, value):
         from bluepy import btle
@@ -268,11 +268,11 @@ class ThermostatWorker(BaseWorker):
         try:
             if method == "preset":
                 if value == HOLD_COMFORT:
-                    thermostat.activate_comfort()
+                    retry(thermostat.activate_comfort, retries=self.command_retries, exception_type=btle.BTLEException)()
                 else:
-                    thermostat.activate_eco()
+                    retry(thermostat.activate_eco, retries=self.command_retries, exception_type=btle.BTLEException)()
             else:
-                setattr(thermostat, method, value)
+                retry(setattr, retries=self.command_retries, exception_type=btle.BTLEException)(thermostat, method, value)
         except btle.BTLEException as e:
             logger.log_exception(
                 _LOGGER,
@@ -286,7 +286,7 @@ class ThermostatWorker(BaseWorker):
             )
             return []
 
-        return self.present_device_state(device_name, thermostat)
+        return retry(self.present_device_state, retries=self.command_retries, exception_type=btle.BTLEException)(device_name, thermostat)
 
     def present_device_state(self, name, thermostat):
         from eq3bt import Mode

@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from interruptingcow import timeout
 from pytz import utc
 
-from const import DEFAULT_COMMAND_TIMEOUT
+from const import DEFAULT_COMMAND_TIMEOUT, DEFAULT_COMMAND_RETRIES, DEFAULT_UPDATE_RETRIES
 from exceptions import WorkerTimeoutError
 from workers_queue import _WORKERS_QUEUE
 import logger
@@ -65,6 +65,8 @@ class WorkersManager:
         self._daemons = []
         self._config = config
         self._command_timeout = config.get("command_timeout", DEFAULT_COMMAND_TIMEOUT)
+        self._command_retries = config.get("command_retries", DEFAULT_COMMAND_RETRIES)
+        self._update_retries = config.get("update_retries", DEFAULT_UPDATE_RETRIES)
 
     def register_workers(self, global_topic_prefix):
         for (worker_name, worker_config) in self._config["workers"].items():
@@ -74,8 +76,14 @@ class WorkersManager:
             command_timeout = worker_config.get(
                 "command_timeout", self._command_timeout
             )
+            command_retries = worker_config.get(
+                "command_retries", self._command_retries
+            )
+            update_retries = worker_config.get(
+                "update_retries", self._update_retries
+            )
             worker_obj = klass(
-                command_timeout, global_topic_prefix, **worker_config["args"]
+                command_timeout, command_retries, update_retries, global_topic_prefix, **worker_config["args"]
             )
 
             if "sensor_config" in self._config and hasattr(worker_obj, "config"):
