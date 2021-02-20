@@ -3,6 +3,7 @@ from mqtt import MqttMessage, MqttConfigMessage
 
 from interruptingcow import timeout
 from workers.base import BaseWorker
+from workers.lywsd03mmc import lywsd03mmc
 import logger
 import json
 import time
@@ -26,16 +27,19 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
         for name, mac in self.devices.items():
             _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
-            self.devices[name] = {
-                "mac": mac,
-                "poller": Lywsd03Mmc2Poller(mac),
-            }
+            self.devices[name] = lywsd03mmc(mac, command_timeout=self.command_timeout, passive=self.passive)
 
     def config(self):
         ret = []
-        for name, data in self.devices.items():
-            ret += self.config_device(name, data["mac"])
+        for name, device in self.devices.items():
+            ret += self.config_device(name, device.mac)
         return ret
+
+    def find_device(self, mac):
+        for name, device in self.devices.items():
+            if device.mac == mac:
+                return device
+        return
 
     def config_device(self, name, mac):
         ret = []
@@ -91,20 +95,32 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
         from bluepy import btle
         _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
 
-        for name, data in self.devices.items():
-            _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, data["mac"])
+        if self.passive:
+            scanner = btle.Scanner()
+            results = scanner.scan(self.scan_timeout if hasattr(self, 'scan_timeout') else 20.0, passive=True)
+
+            for res in results:
+                device = self.find_device(res.addr)
+                if device:
+                    for (adtype, desc, value) in res.getScanData():
+                        if ("1a18" in value):
+                            _LOGGER.debug("%s - received scan data %s", res.addr, value)
+                            device.processScanValue(value)
+
+        for name, device in self.devices.items():
+            _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), name, device.mac)
             # from btlewrap import BluetoothBackendException
 
             try:
                 with timeout(self.command_timeout, exception=DeviceTimeoutError):
-                    yield self.update_device_state(name, data["poller"])
+                    yield self.update_device_state(name, device)
             except btle.BTLEException as e:
                 logger.log_exception(
                     _LOGGER,
                     "Error during update of %s device '%s' (%s): %s",
                     repr(self),
                     name,
-                    data["mac"],
+                    device.mac,
                     type(e).__name__,
                     suppress=True,
                 )
@@ -114,23 +130,23 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
                     "Time out during update of %s device '%s' (%s)",
                     repr(self),
                     name,
-                    data["mac"],
+                    device.mac,
                     suppress=True,
                 )
 
-    def update_device_state(self, name, poller):
+    def update_device_state(self, name, device):
         ret = []
-        if poller.readAll() is None :
+        if device.readAll() is None :
             return ret
         for attr in monitoredAttrs:
 
             attrValue = None
             if attr == "humidity":
-                attrValue = poller.getHumidity()
+                attrValue = device.getHumidity()
             elif attr == "temperature":
-                attrValue = poller.getTemperature()
+                attrValue = device.getTemperature()
             elif attr == ATTR_BATTERY:
-                attrValue = poller.getBattery()
+                attrValue = device.getBattery()
 
             ret.append(
                 MqttMessage(
@@ -143,94 +159,8 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
         ret.append(
             MqttMessage(
                 topic=self.format_topic(name, ATTR_LOW_BATTERY),
-                payload=self.true_false_to_ha_on_off(poller.getBattery() < 3),
+                payload=self.true_false_to_ha_on_off(device.getBattery() < 3),
             )
         )
 
         return ret
-
-class Lywsd03Mmc2Poller:
-
-    def __init__(self, mac, maxattempt=4):
-        self.mac = mac
-        self.maxattempt = maxattempt
-
-        self._temperature = None
-        self._humidity = None
-        self._battery = None
-
-    @contextmanager
-    def connected(self):
-        from bluepy import btle
-
-        attempt = 1
-        while attempt < (self.maxattempt + 1) :
-            try:
-                device = btle.Peripheral()
-                _LOGGER.debug("trying to connect to %s", self.mac)
-                device.connect(self.mac)
-                _LOGGER.debug("connected to %s", self.mac)
-                device.writeCharacteristic(0x0038, b'\x01\x00', True)
-                device.writeCharacteristic(0x0046, b'\xf4\x01\x00', True)
-                _LOGGER.debug("%s query done ", self.mac)
-                yield device
-                device.disconnect()
-                _LOGGER.debug("%s is disconnected ", self.mac)
-                attempt = (self.maxattempt + 1)
-            except btle.BTLEException as er:
-                _LOGGER.debug("failed to connect to %s : " + str(attempt) + "/" + str(self.maxattempt) + " attempt", self.mac)
-                if attempt == self.maxattempt :
-                    yield None
-                    pass
-                    return
-                else:
-                    attempt = attempt + 1
-                    _LOGGER.debug("waiting for next try...")
-                    time.sleep(1)
-                    pass
-
-    def readAll(self):
-        with self.connected() as device:
-            if device is None :
-                return None
-
-            self.getData(device)
-            temperature = self.getTemperature()
-            humidity = self.getHumidity()
-            battery = self.getBattery()
-
-            _LOGGER.debug("successfully read %f, %d, %d", temperature, humidity, battery)
-
-            return {
-                "temperature": temperature,
-                "humidity": humidity,
-                "battery": battery,
-            }
-
-    def getData(self, device):
-        self.subscribe(device)
-        while True:
-            if device.waitForNotifications(1):
-                break
-        return self._temperature, self._humidity, self._battery
-
-    def getTemperature(self):
-        return self._temperature;
-
-    def getHumidity(self):
-        return self._humidity;
-
-    def getBattery(self):
-        return self._battery;
-
-    def subscribe(self, device):
-        device.setDelegate(self)
-
-    def handleNotification(self, handle, data):
-        temperature = int.from_bytes(data[0:2], byteorder='little', signed=True) / 100
-        humidity = int.from_bytes(data[2:3], byteorder='little')
-        battery = int.from_bytes(data[3:5], byteorder='little') / 1000
-
-        self._temperature = round(temperature, 1)
-        self._humidity = round(humidity)
-        self._battery = round(battery, 4)
