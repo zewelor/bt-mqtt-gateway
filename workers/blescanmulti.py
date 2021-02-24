@@ -88,7 +88,7 @@ class BlescanmultiWorker(BaseWorker):
     scan_timeout = 10.0  # type: float
     scan_passive = True  # type: str or bool
 
-    def __init__(self, command_timeout, global_topic_prefix, **kwargs):
+    def __init__(self, *args, **kwargs):
         from bluepy.btle import Scanner, DefaultDelegate
 
         class ScanDelegate(DefaultDelegate):
@@ -99,9 +99,7 @@ class BlescanmultiWorker(BaseWorker):
                 if isNewDev:
                     _LOGGER.debug("Discovered new device: %s" % dev.addr)
 
-        super(BlescanmultiWorker, self).__init__(
-            command_timeout, global_topic_prefix, **kwargs
-        )
+        super(BlescanmultiWorker, self).__init__(*args, **kwargs)
         self.scanner = Scanner().withDelegate(ScanDelegate())
         self.last_status = [
             BleDeviceStatus(self, mac, name) for name, mac in self.devices.items()
