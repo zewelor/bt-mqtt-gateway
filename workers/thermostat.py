@@ -60,13 +60,13 @@ class ThermostatWorker(BaseWorker):
                 self.devices[name]["mac"],
             )
 
-    def config(self):
+    def config(self, availability_topic):
         ret = []
         for name, data in self.devices.items():
-            ret += self.config_device(name, data)
+            ret += self.config_device(name, data, availability_topic)
         return ret
 
-    def config_device(self, name, data):
+    def config_device(self, name, data, availability_topic):
         ret = []
         mac = data["mac"]
         device = {
@@ -80,6 +80,7 @@ class ThermostatWorker(BaseWorker):
             "unique_id": self.format_discovery_id(mac, name, SENSOR_CLIMATE),
             "name": self.format_discovery_name(name, SENSOR_CLIMATE),
             "qos": 1,
+            "availability_topic": availability_topic,
             "temperature_state_topic": self.format_prefixed_topic(
                 name, SENSOR_TARGET_TEMPERATURE
             ),
@@ -120,6 +121,7 @@ class ThermostatWorker(BaseWorker):
             "unique_id": self.format_discovery_id(mac, name, SENSOR_WINDOW),
             "name": self.format_discovery_name(name, SENSOR_WINDOW),
             "state_topic": self.format_prefixed_topic(name, SENSOR_WINDOW),
+            "availability_topic": availability_topic,
             "device_class": "window",
             "payload_on": "true",
             "payload_off": "false",
@@ -137,6 +139,7 @@ class ThermostatWorker(BaseWorker):
             "unique_id": self.format_discovery_id(mac, name, SENSOR_BATTERY),
             "name": self.format_discovery_name(name, SENSOR_BATTERY),
             "state_topic": self.format_prefixed_topic(name, SENSOR_BATTERY),
+            "availability_topic": availability_topic,
             "device_class": "battery",
             "payload_on": "true",
             "payload_off": "false",
@@ -154,6 +157,7 @@ class ThermostatWorker(BaseWorker):
             "unique_id": self.format_discovery_id(mac, name, SENSOR_LOCKED),
             "name": self.format_discovery_name(name, SENSOR_LOCKED),
             "state_topic": self.format_prefixed_topic(name, SENSOR_LOCKED),
+            "availability_topic": availability_topic,
             "device_class": "lock",
             "payload_on": "false",
             "payload_off": "true",
@@ -171,6 +175,7 @@ class ThermostatWorker(BaseWorker):
             "unique_id": self.format_discovery_id(mac, name, SENSOR_VALVE),
             "name": self.format_discovery_name(name, SENSOR_VALVE),
             "state_topic": self.format_prefixed_topic(name, SENSOR_VALVE),
+            "availability_topic": availability_topic,
             "unit_of_measurement": "%",
             "device": device,
         }

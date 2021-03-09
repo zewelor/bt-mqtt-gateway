@@ -29,7 +29,7 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
             _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
             self.devices[name] = lywsd03mmc(mac, command_timeout=self.command_timeout, passive=self.passive)
 
-    def config(self):
+    def config(self, availability_topic):
         ret = []
         for name, device in self.devices.items():
             ret += self.config_device(name, device.mac)

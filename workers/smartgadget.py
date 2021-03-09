@@ -23,7 +23,7 @@ class SmartgadgetWorker(BaseWorker):
             _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
             self.devices[name] = SmartGadget(mac)
 
-    def config(self):
+    def config(self, availability_topic):
         ret = []
         for name, device in self.devices.items():
             ret.extend(self.config_device(name, device.mac))

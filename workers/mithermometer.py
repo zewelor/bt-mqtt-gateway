@@ -26,7 +26,7 @@ class MithermometerWorker(BaseWorker):
                 "poller": MiThermometerPoller(mac, BluepyBackend),
             }
 
-    def config(self):
+   def config(self, availbility_topic):
         ret = []
         for name, data in self.devices.items():
             ret += self.config_device(name, data["mac"])

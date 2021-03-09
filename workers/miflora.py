@@ -36,7 +36,7 @@ class MifloraWorker(BaseWorker):
                 "poller": MiFloraPoller(mac, BluepyBackend),
             }
 
-    def config(self):
+    def config(self, availability_topic):
         ret = []
         for name, data in self.devices.items():
             ret += self.config_device(name, data["mac"])
