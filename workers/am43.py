@@ -98,9 +98,12 @@ class Am43Worker(BaseWorker):
         battery = 0
         retry_attempts = 0
         while battery == 0 and retry_attempts < 5:
+            retry_attempts += 1
+
             # The docs for this library say that sometimes this needs called
             # multiple times, try up to 5 until we get a battery number
-            shade.update()
+            if not shade.update():
+                continue
 
             battery = shade.battery
 
@@ -248,7 +251,9 @@ class Am43Worker(BaseWorker):
                     device_position = self.correct_value(data, device_state["currentPosition"])
 
                     if value == 'STOP':
-                        shade.stop()
+                        if not shade.stop():
+                            raise AttributeError('shade.stop() failed')
+
                         device_state = {
                             "currentPosition": device_position,
                             "targetPosition": device_position,
@@ -272,7 +277,8 @@ class Am43Worker(BaseWorker):
 
                         # Yes, for open command we need to call close(), because "closed blinds" in AM43
                         # means that they're hidden, and the window is full open
-                        shade.close()
+                        if not shade.close():
+                            raise AttributeError('shade.close() failed')
                         device_state = {
                             "currentPosition": device_position,
                             "targetPosition": 0,
@@ -295,7 +301,8 @@ class Am43Worker(BaseWorker):
                         shade.stop()
 
                         # Same as above for 'OPEN': we need to call open() when want to close() the window
-                        shade.open()
+                        if not shade.open():
+                            raise AttributeError('shade.open() failed')
                         device_state = {
                             "currentPosition": device_position,
                             "targetPosition": 100,
@@ -363,7 +370,8 @@ class Am43Worker(BaseWorker):
                             state = "opening"
 
                         # send the new position
-                        shade.set_position(target_position)
+                        if not shade.set_position(target_position):
+                            raise AttributeError('shade.set_position() failed')
 
                         device_state = {
                             "currentPosition": device_position,
