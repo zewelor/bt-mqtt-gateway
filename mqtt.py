@@ -184,6 +184,7 @@ class MqttConfigMessage(MqttMessage):
     SENSOR = "sensor"
     CLIMATE = "climate"
     BINARY_SENSOR = "binary_sensor"
+    COVER = "cover"
 
     use_global_prefix = False
 
