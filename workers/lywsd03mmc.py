@@ -54,7 +54,7 @@ class lywsd03mmc:
     def __init__(self, mac, command_timeout=30, passive=False):
         self.mac = mac
         self.passive = passive
-        self.timeout = command_timeout
+        self.command_timeout = command_timeout
 
         self._temperature = None
         self._humidity = None
