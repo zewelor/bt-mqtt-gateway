@@ -48,7 +48,7 @@ def verify():
         _LOGGER.error('Error: unsatisfied requirements:')
         for error in errors:
             _LOGGER.error('  %s', error)
-        _LOGGER.error('You may install those with pip: python -m pip install %s',
+        _LOGGER.error('You may install those with pip: python3 -m pip install %s',
                       ' '.join(requirements))
         exit(1)
 
