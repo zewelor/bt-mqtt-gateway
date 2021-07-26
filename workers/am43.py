@@ -9,8 +9,8 @@ from workers.base import BaseWorker
 _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = [
-    "git+https://github.com/GylleTanken/python-zemismart-roller-shade.git"
-    "@36738c72d7382e78e1223c8ae569acab10f498e6#egg=Zemismart"
+    "git+https://github.com/andrey-yantsen/python-zemismart-roller-shade.git"
+    "@e919a3ae43d0c74b60e694815c3c3ce6ba83b0f4#egg=Zemismart"
 ]
 
 
