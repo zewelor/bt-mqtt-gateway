@@ -112,6 +112,8 @@ class Am43Worker(BaseWorker):
                     # to agree with the device
                     self.last_target_position = shade.position
 
+                time_from_last_update = time.time() - self._last_device_update[data['mac']]
+
                 shade_position = self.correct_value(data, shade.position)
                 target_position = self.correct_value(data, self.last_target_position)
 
@@ -122,7 +124,7 @@ class Am43Worker(BaseWorker):
                 elif shade_position >= 100 - self.target_range_scale:
                     state = 'closed'
 
-                if self._last_device_update[data['mac']] - time.time() <= 10 and previous_position != 255:
+                if time_from_last_update <= 10 and previous_position != 255:
                     if previous_position < shade_position:
                         state = 'closing'
                     elif previous_position > shade_position:
@@ -136,6 +138,7 @@ class Am43Worker(BaseWorker):
                     "targetPosition": target_position,
                     "battery": shade.battery,
                     "positionState": state,
+                    "time_from_last_update": time_from_last_update,
                 }
             else:
                 _LOGGER.debug("Got battery state 0 for '%s' (%s)", device_name, data["mac"])
@@ -183,9 +186,18 @@ class Am43Worker(BaseWorker):
                     ret.append(
                         MqttMessage(
                             topic=self.format_topic('update_interval'),
+                            payload=3
+                        )
+                    )
+                    self.update_interval = 3
+                elif not device_state['positionState'].endswith('ing') and self.default_update_interval != self.update_interval:
+                    ret.append(
+                        MqttMessage(
+                            topic=self.format_topic('update_interval'),
                             payload=self.default_update_interval
                         )
                     )
+                    self.update_interval = self.default_update_interval
 
                 return ret
         except AttributeError as e:
@@ -200,6 +212,8 @@ class Am43Worker(BaseWorker):
                 type(e).__name__,
                 suppress=True,
             )
+
+        return []
 
     def status_update(self):
         _LOGGER.info("Updating %d %s devices", len(self.devices), repr(self))
@@ -244,6 +258,7 @@ class Am43Worker(BaseWorker):
                         self.last_target_position = device_position
 
                         if self.default_update_interval:
+                            self.update_interval = self.default_update_interval
                             ret.append(
                                 MqttMessage(
                                     topic=self.format_topic('update_interval'),
@@ -253,6 +268,8 @@ class Am43Worker(BaseWorker):
 
                         ret += self.create_mqtt_messages(device_name, device_state)
                     elif value == 'OPEN' and device_position > self.target_range_scale:
+                        shade.stop()
+
                         # Yes, for open command we need to call close(), because "closed blinds" in AM43
                         # means that they're hidden, and the window is full open
                         shade.close()
@@ -275,6 +292,8 @@ class Am43Worker(BaseWorker):
 
                         ret += self.create_mqtt_messages(device_name, device_state)
                     elif value == 'CLOSE' and device_position < 100 - self.target_range_scale:
+                        shade.stop()
+
                         # Same as above for 'OPEN': we need to call open() when want to close() the window
                         shade.open()
                         device_state = {
