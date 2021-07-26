@@ -177,8 +177,8 @@ class Am43Worker(BaseWorker):
 
         _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), device_name, data["mac"])
 
-        shade = Zemismart.Zemismart(
-            data["mac"], data["pin"], max_connect_time=self.per_device_timeout, withMutex=True)
+        shade = Zemismart.Zemismart(data["mac"], data["pin"], max_connect_time=self.per_device_timeout,
+                                    withMutex=True, iface=data.get('iface'))
         try:
             with shade:
                 ret = []
@@ -244,7 +244,7 @@ class Am43Worker(BaseWorker):
         value = value.decode("utf-8")
         if field == "positionState" and action == "set":
             shade = Zemismart.Zemismart(data["mac"], data["pin"], max_connect_time=self.per_device_timeout,
-                                        withMutex=True)
+                                        withMutex=True, iface=data.get('iface'))
             try:
                 with shade:
                     device_state = self.get_device_state(device_name, data, shade)
@@ -346,7 +346,7 @@ class Am43Worker(BaseWorker):
             self.last_target_position = target_position
 
             shade = Zemismart.Zemismart(data["mac"], data["pin"], max_connect_time=self.per_device_timeout,
-                                        withMutex=True)
+                                        withMutex=True, iface=data.get('iface'))
             try:
                 with shade:
                     # get the current state so we can work out direction for update messages
