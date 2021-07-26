@@ -113,8 +113,7 @@ class Am43Worker(BaseWorker):
                     self.last_target_position = shade.position
 
                 shade_position = self.correct_value(data, shade.position)
-                target_position = self.correct_value(
-                    data, self.last_target_position)
+                target_position = self.correct_value(data, self.last_target_position)
 
                 previous_position = self._last_position_by_device[data['mac']]
                 state = 'stopped'
@@ -139,8 +138,7 @@ class Am43Worker(BaseWorker):
                     "positionState": state,
                 }
             else:
-                _LOGGER.debug("Got battery state 0 for '%s' (%s)",
-                              device_name, data["mac"])
+                _LOGGER.debug("Got battery state 0 for '%s' (%s)", device_name, data["mac"])
 
     def create_mqtt_messages(self, device_name, device_state):
         return [
@@ -171,8 +169,7 @@ class Am43Worker(BaseWorker):
     def single_device_status_update(self, device_name, data):
         import Zemismart
 
-        _LOGGER.debug("Updating %s device '%s' (%s)",
-                      repr(self), device_name, data["mac"])
+        _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), device_name, data["mac"])
 
         shade = Zemismart.Zemismart(
             data["mac"], data["pin"], max_connect_time=self.per_device_timeout, withMutex=True)
@@ -182,8 +179,7 @@ class Am43Worker(BaseWorker):
                 device_state = self.get_device_state(device_name, data, shade)
                 ret += self.create_mqtt_messages(device_name, device_state)
 
-                if not device_state['positionState'].endswith(
-                        'ing') and self.default_update_interval != self.update_interval:
+                if device_state['positionState'].endswith('ing') and self.default_update_interval == self.update_interval:
                     ret.append(
                         MqttMessage(
                             topic=self.format_topic('update_interval'),
@@ -234,10 +230,8 @@ class Am43Worker(BaseWorker):
                                         withMutex=True)
             try:
                 with shade:
-                    device_state = self.get_device_state(
-                        device_name, data, shade)
-                    device_position = self.correct_value(
-                        data, device_state["currentPosition"])
+                    device_state = self.get_device_state(device_name, data, shade)
+                    device_position = self.correct_value(data, device_state["currentPosition"])
 
                     if value == 'STOP':
                         shade.stop()
@@ -257,8 +251,7 @@ class Am43Worker(BaseWorker):
                                 )
                             )
 
-                        ret += self.create_mqtt_messages(
-                            device_name, device_state)
+                        ret += self.create_mqtt_messages(device_name, device_state)
                     elif value == 'OPEN' and device_position > self.target_range_scale:
                         # Yes, for open command we need to call close(), because "closed blinds" in AM43
                         # means that they're hidden, and the window is full open
@@ -280,8 +273,7 @@ class Am43Worker(BaseWorker):
                                 )
                             )
 
-                        ret += self.create_mqtt_messages(
-                            device_name, device_state)
+                        ret += self.create_mqtt_messages(device_name, device_state)
                     elif value == 'CLOSE' and device_position < 100 - self.target_range_scale:
                         # Same as above for 'OPEN': we need to call open() when want to close() the window
                         shade.open()
@@ -293,8 +285,7 @@ class Am43Worker(BaseWorker):
                         }
                         self.last_target_position = 100
 
-                        ret += self.create_mqtt_messages(
-                            device_name, device_state)
+                        ret += self.create_mqtt_messages(device_name, device_state)
 
                         if self.default_update_interval:
                             self.update_interval = 3
@@ -335,10 +326,8 @@ class Am43Worker(BaseWorker):
                     # get the current state so we can work out direction for update messages
                     # after getting this, convert so we are using the device scale for
                     # values
-                    device_state = self.get_device_state(
-                        device_name, data, shade)
-                    device_position = self.correct_value(
-                        data, device_state["currentPosition"])
+                    device_state = self.get_device_state(device_name, data, shade)
+                    device_position = self.correct_value(data, device_state["currentPosition"])
 
                     if device_position == target_position:
                         # no update required, not moved
