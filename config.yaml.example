@@ -162,5 +162,6 @@ manager:
             invert: true        # Set to true to make position 100 be open instead of the default of closed
         topic_prefix: blinds
         per_device_timeout: 40
+        iface: 0                # Optional; you can get the list of available interfaces by calling `hciconfig`
       topic_subscription: blinds/+/+/+
       update_interval: 300
