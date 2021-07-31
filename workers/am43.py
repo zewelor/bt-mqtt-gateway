@@ -10,7 +10,7 @@ _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = [
     "git+https://github.com/andrey-yantsen/python-zemismart-roller-shade.git"
-    "@e919a3ae43d0c74b60e694815c3c3ce6ba83b0f4#egg=Zemismart"
+    "@dbb17a3bbe0441db3886c8b3a616d35337e876c2#egg=Zemismart"
 ]
 
 
