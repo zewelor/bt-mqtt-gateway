@@ -55,7 +55,7 @@ class Am43Worker(BaseWorker):
                 payload={
                     'device_class': device_class,
                     'unique_id': self.format_discovery_id('am43', name, data['mac']),
-                    'name': 'Blinds',
+                    'name': 'AM43 Blinds ({})'.format(name),
                     'availability_topic': "{}/{}".format(self.global_topic_prefix, availability_topic),
                     'device': device,
                     'position_open': 0 + self.target_range_scale,
@@ -71,12 +71,11 @@ class Am43Worker(BaseWorker):
         ret.append(
             MqttConfigMessage(
                 MqttConfigMessage.SENSOR,
-                self.format_discovery_topic(
-                    data['mac'], name, 'shade', 'battery'),
+                self.format_discovery_topic(data['mac'], name, 'shade', 'battery'),
                 payload={
                     'device_class': 'battery',
                     'unique_id': self.format_discovery_id('am43', name, data['mac'], 'battery'),
-                    'name': 'Battery',
+                    'name': 'AM43 Blinds ({}) battery'.format(name),
                     'availability_topic': "{}/{}".format(self.global_topic_prefix, availability_topic),
                     '~': self.format_prefixed_topic(name),
                     'unit_of_measurement': '%',
