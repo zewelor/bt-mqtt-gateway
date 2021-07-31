@@ -10,7 +10,7 @@ _LOGGER = logger.get(__name__)
 
 REQUIREMENTS = [
     "git+https://github.com/andrey-yantsen/python-zemismart-roller-shade.git"
-    "@dbb17a3bbe0441db3886c8b3a616d35337e876c2#egg=Zemismart"
+    "@61a9a38656910e5ff74c45d7e3309eada5edcd01#egg=Zemismart"
 ]
 
 
@@ -30,6 +30,7 @@ class Am43Worker(BaseWorker):
             self.rapid_update_interval = None
 
         self.update_interval = self.default_update_interval
+        self.availability_topic = None
 
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
 
@@ -39,21 +40,24 @@ class Am43Worker(BaseWorker):
             ret += self.config_device(name, data, availability_topic)
         return ret
 
-    def config_device(self, name, data, availability_topic):
-        ret = []
-        device_class = data.get('hass_device_class', 'shade')
-        device = {
-            'identifiers': [data['mac'], self.format_discovery_id(data['mac'], name)],
+    def _get_hass_device_description(self, name):
+        device_class = self.devices[name].get('hass_device_class', 'shade')
+        return {
+            'identifiers': [self.devices[name]['mac'], self.format_discovery_id(self.devices[name]['mac'], name)],
             'manufacturer': 'A-OK',
             'model': 'AM43',
             'name': '{} ({})'.format(device_class.title(), name),
         }
+
+    def config_device(self, name, data, availability_topic):
+        ret = []
+        device = self._get_hass_device_description(name)
         ret.append(
             MqttConfigMessage(
                 MqttConfigMessage.COVER,
                 self.format_discovery_topic(data['mac'], name, 'shade'),
                 payload={
-                    'device_class': device_class,
+                    'device_class': data.get('hass_device_class', 'shade'),
                     'unique_id': self.format_discovery_id('am43', name, data['mac']),
                     'name': 'AM43 Blinds ({})'.format(name),
                     'availability_topic': "{}/{}".format(self.global_topic_prefix, availability_topic),
@@ -84,7 +88,44 @@ class Am43Worker(BaseWorker):
                 }
             )
         )
+        self.availability_topic = "{}/{}".format(self.global_topic_prefix, availability_topic)
         return ret
+
+    def configure_device_timer(self, device_name, timer_id, timer):
+        from config import settings
+
+        if not settings.get('manager', {}).get('sensor_config'):
+            return
+
+        data = self.devices[device_name]
+        device = self._get_hass_device_description(device_name)
+
+        timer_alias = 'timer{}'.format(timer_id)
+
+        if timer is None:
+            payload = ''
+        else:
+            payload = {
+                'unique_id': self.format_discovery_id('am43', device_name, data['mac'], timer_alias),
+                'name': 'AM43 Blinds ({}) Timer {}: Set to {}% at {}'.format(device_name, timer_id,
+                                                                             timer['position'], timer['time']),
+                'availability_topic': self.availability_topic,
+                'device': device,
+                'state_topic': '~/{}'.format(timer_alias),
+                'command_topic': '~/{}/set'.format(timer_alias),
+                '~': self.format_prefixed_topic(device_name),
+            }
+
+        # Creepy way to do HASS sensors not only during the configuration time
+        return MqttConfigMessage(
+            component=settings['manager']["sensor_config"].get("topic", "homeassistant"),
+            name='{}/{}'.format(
+                MqttConfigMessage.SWITCH,
+                self.format_discovery_topic(data['mac'], device_name, 'shade', timer_alias)
+            ),
+            payload=payload,
+            retain=settings['manager']["sensor_config"].get("retain", True)
+        )
 
     # Based on the accessory configuration, this will either
     # return the supplied value right back, or will invert
@@ -96,6 +137,8 @@ class Am43Worker(BaseWorker):
             return value
 
     def get_device_state(self, device_name, data, shade):
+        from Zemismart import Zemismart
+
         battery = 0
         retry_attempts = 0
         while battery == 0 and retry_attempts < self.update_retries:
@@ -145,12 +188,29 @@ class Am43Worker(BaseWorker):
                     "battery": shade.battery,
                     "positionState": state,
                     "time_from_last_update": time_from_last_update,
+                    "timers": [
+                        {
+                            'enabled': timer.enabled,
+                            'position': timer.position,
+                            'time': '{:02d}:{:02d}'.format(timer.hours, timer.minutes),
+                            'repeat': {
+                                'Monday': timer.repeats & Zemismart.Timer.REPEAT_MONDAY != 0,
+                                'Tuesday': timer.repeats & Zemismart.Timer.REPEAT_TUESDAY != 0,
+                                'Wednesday': timer.repeats & Zemismart.Timer.REPEAT_WEDNESDAY != 0,
+                                'Thursday': timer.repeats & Zemismart.Timer.REPEAT_THURSDAY != 0,
+                                'Friday': timer.repeats & Zemismart.Timer.REPEAT_FRIDAY != 0,
+                                'Saturday': timer.repeats & Zemismart.Timer.REPEAT_SATURDAY != 0,
+                                'Sunday': timer.repeats & Zemismart.Timer.REPEAT_SUNDAY != 0,
+                            }
+                        }
+                        for timer in shade.timers
+                    ],
                 }
             else:
                 _LOGGER.debug("Got battery state 0 for '%s' (%s)", device_name, data["mac"])
 
     def create_mqtt_messages(self, device_name, device_state):
-        return [
+        ret = [
             MqttMessage(
                 topic=self.format_topic(device_name),
                 payload=json.dumps(device_state)
@@ -174,6 +234,24 @@ class Am43Worker(BaseWorker):
                 payload=device_state["positionState"]
             )
         ]
+
+        for timer_id, timer in enumerate(device_state['timers']):
+            hass = self.configure_device_timer(device_name, timer_id, timer)
+            if hass:
+                ret.append(hass)
+            ret.append(
+                MqttMessage(
+                    topic=self.format_topic(device_name, "timer{}".format(timer_id)),
+                    payload='ON' if timer['enabled'] else 'OFF'
+                )
+            )
+
+        for timer_id in range(len(device_state['timers']), 4):
+            hass = self.configure_device_timer(device_name, timer_id, None)
+            if hass:
+                ret.append(hass)
+
+        return ret
 
     def single_device_status_update(self, device_name, data):
         _LOGGER.debug("Updating %s device '%s' (%s)", repr(self), device_name, data["mac"])
@@ -227,12 +305,12 @@ class Am43Worker(BaseWorker):
                 if not shade.stop():
                     raise AttributeError('shade.stop() failed')
 
-                device_state = {
+                device_state.update({
                     "currentPosition": device_position,
                     "targetPosition": device_position,
                     "battery": shade.battery,
                     "positionState": 'stopped'
-                }
+                })
                 self.last_target_position = device_position
 
                 if self.default_update_interval and self.rapid_update_interval:
@@ -252,12 +330,12 @@ class Am43Worker(BaseWorker):
                 # means that they're hidden, and the window is full open
                 if not shade.close():
                     raise AttributeError('shade.close() failed')
-                device_state = {
+                device_state.update({
                     "currentPosition": device_position,
                     "targetPosition": 0,
                     "battery": shade.battery,
                     "positionState": 'opening'
-                }
+                })
                 self.last_target_position = 0
 
                 if self.default_update_interval and self.rapid_update_interval:
@@ -276,12 +354,12 @@ class Am43Worker(BaseWorker):
                 # Same as above for 'OPEN': we need to call open() when want to close() the window
                 if not shade.open():
                     raise AttributeError('shade.open() failed')
-                device_state = {
+                device_state.update({
                     "currentPosition": device_position,
                     "targetPosition": 100,
                     "battery": shade.battery,
                     "positionState": 'closing'
-                }
+                })
                 self.last_target_position = 100
 
                 ret += self.create_mqtt_messages(device_name, device_state)
@@ -337,12 +415,12 @@ class Am43Worker(BaseWorker):
                 if not shade.set_position(target_position):
                     raise AttributeError('shade.set_position() failed')
 
-                device_state = {
+                device_state.update({
                     "currentPosition": device_position,
                     "targetPosition": target_position,
                     "battery": shade.battery,
                     "positionState": state
-                }
+                })
 
                 ret += self.create_mqtt_messages(device_name, device_state)
 
@@ -354,6 +432,24 @@ class Am43Worker(BaseWorker):
                             payload=self.rapid_update_interval
                         )
                     )
+        return ret
+
+    def set_timer_state(self, timer_id, state, device_name):
+        from Zemismart import Zemismart
+
+        ret = []
+
+        data = self.devices[device_name]
+        target_state = True if state == 'ON' else False
+
+        shade = Zemismart(data["mac"], data["pin"], max_connect_time=self.per_device_timeout,
+                          withMutex=True, iface=data.get('iface'))
+        with shade:
+            shade.update()
+            shade.timer_toggle(timer_id, target_state)
+            device_state = self.get_device_state(device_name, data, shade)
+            ret += self.create_mqtt_messages(device_name, device_state)
+
         return ret
 
     def handle_mqtt_command(self, topic, value):
@@ -373,6 +469,8 @@ class Am43Worker(BaseWorker):
             ret += self.set_state(value, device_name)
         elif field == "targetPosition" and action == "set":
             ret += self.set_position(value, device_name)
+        elif field.startswith('timer') and action == "set":
+            ret += self.set_timer_state(int(field[-1]), value, device_name)
         elif field == "get" or action == "get":
             ret += retry(self.single_device_status_update, retries=self.update_retries)(device_name, data)
 
