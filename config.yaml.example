@@ -158,10 +158,15 @@ manager:
         devices:
           upper_hall: 
             mac: 00:11:22:33:44:55
-            pin: 8888           # Pin code for the device
-            invert: true        # Set to true to make position 100 be open instead of the default of closed
+            pin: 8888             # Pin code for the device
+            invert: true          # Set to true to make position 100 be open instead of the default of closed
         topic_prefix: blinds
         per_device_timeout: 40
-        iface: 0                # Optional; you can get the list of available interfaces by calling `hciconfig`
+        iface: 0                  # Optional; you can get the list of available interfaces by calling `hciconfig`
+        rapid_update_interval: 10 # Optional; if set — the status of the device would be requested automatically after this value of seconds,
+                                  # if any activity was detected during the last update (or a command was executed)
+        default_update_interval: 300 # Optional; used together with `rapid_update_interval`, should have the same value as update_interval.
+                                     # when no changes detected after an update request, and `rapid_update_interval` is set, the update update_interval
+                                     # will be changed to `default_update_interval`.
       topic_subscription: blinds/+/+/+
       update_interval: 300

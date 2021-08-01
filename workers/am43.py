@@ -26,6 +26,9 @@ class Am43Worker(BaseWorker):
         if not hasattr(self, 'default_update_interval'):
             self.default_update_interval = None
 
+        if not hasattr(self, 'rapid_update_interval'):
+            self.rapid_update_interval = None
+
         self.update_interval = self.default_update_interval
 
         _LOGGER.info("Adding %d %s devices", len(self.devices), repr(self))
@@ -181,22 +184,23 @@ class Am43Worker(BaseWorker):
             device_state = self.get_device_state(device_name, data, shade)
             ret += self.create_mqtt_messages(device_name, device_state)
 
-            if device_state['positionState'].endswith('ing') and self.default_update_interval == self.update_interval:
-                ret.append(
-                    MqttMessage(
-                        topic=self.format_topic('update_interval'),
-                        payload=3
+            if self.rapid_update_interval and self.default_update_interval:
+                if device_state['positionState'].endswith('ing') and self.default_update_interval == self.update_interval:
+                    ret.append(
+                        MqttMessage(
+                            topic=self.format_topic('update_interval'),
+                            payload=self.rapid_update_interval
+                        )
                     )
-                )
-                self.update_interval = 3
-            elif not device_state['positionState'].endswith('ing') and self.default_update_interval != self.update_interval:
-                ret.append(
-                    MqttMessage(
-                        topic=self.format_topic('update_interval'),
-                        payload=self.default_update_interval
+                    self.update_interval = self.rapid_update_interval
+                elif not device_state['positionState'].endswith('ing') and self.default_update_interval != self.update_interval:
+                    ret.append(
+                        MqttMessage(
+                            topic=self.format_topic('update_interval'),
+                            payload=self.default_update_interval
+                        )
                     )
-                )
-                self.update_interval = self.default_update_interval
+                    self.update_interval = self.default_update_interval
 
             return ret
 
@@ -229,7 +233,7 @@ class Am43Worker(BaseWorker):
                 }
                 self.last_target_position = device_position
 
-                if self.default_update_interval:
+                if self.default_update_interval and self.rapid_update_interval:
                     self.update_interval = self.default_update_interval
                     ret.append(
                         MqttMessage(
@@ -254,12 +258,12 @@ class Am43Worker(BaseWorker):
                 }
                 self.last_target_position = 0
 
-                if self.default_update_interval:
-                    self.update_interval = 3
+                if self.default_update_interval and self.rapid_update_interval:
+                    self.update_interval = self.rapid_update_interval
                     ret.append(
                         MqttMessage(
                             topic=self.format_topic('update_interval'),
-                            payload=3
+                            payload=self.rapid_update_interval
                         )
                     )
 
@@ -280,12 +284,12 @@ class Am43Worker(BaseWorker):
 
                 ret += self.create_mqtt_messages(device_name, device_state)
 
-                if self.default_update_interval:
-                    self.update_interval = 3
+                if self.default_update_interval and self.rapid_update_interval:
+                    self.update_interval = self.rapid_update_interval
                     ret.append(
                         MqttMessage(
                             topic=self.format_topic('update_interval'),
-                            payload=3
+                            payload=self.rapid_update_interval
                         )
                     )
         return ret
@@ -340,12 +344,12 @@ class Am43Worker(BaseWorker):
 
                 ret += self.create_mqtt_messages(device_name, device_state)
 
-                if self.default_update_interval:
-                    self.update_interval = 3
+                if self.default_update_interval and self.rapid_update_interval:
+                    self.update_interval = self.rapid_update_interval
                     ret.append(
                         MqttMessage(
                             topic=self.format_topic('update_interval'),
-                            payload=3
+                            payload=self.rapid_update_interval
                         )
                     )
         return ret
