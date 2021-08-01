@@ -162,6 +162,7 @@ manager:
             invert: true          # Set to true to make position 100 be open instead of the default of closed
         topic_prefix: blinds
         per_device_timeout: 40
+        hass_device_class: blind  # Optional; the default will be "shade", see https://www.home-assistant.io/integrations/cover/#device-class for details
         iface: 0                  # Optional; you can get the list of available interfaces by calling `hciconfig`
         rapid_update_interval: 10 # Optional; if set — the status of the device would be requested automatically after this value of seconds,
                                   # if any activity was detected during the last update (or a command was executed)

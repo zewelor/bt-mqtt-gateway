@@ -41,18 +41,19 @@ class Am43Worker(BaseWorker):
 
     def config_device(self, name, data, availability_topic):
         ret = []
+        device_class = data.get('hass_device_class', 'shade')
         device = {
             'identifiers': [data['mac'], self.format_discovery_id(data['mac'], name)],
             'manufacturer': 'A-OK',
             'model': 'AM43',
-            'name': self.format_discovery_name(name),
+            'name': '{} ({})'.format(device_class.title(), name),
         }
         ret.append(
             MqttConfigMessage(
                 MqttConfigMessage.COVER,
                 self.format_discovery_topic(data['mac'], name, 'shade'),
                 payload={
-                    'device_class': 'blind',
+                    'device_class': device_class,
                     'unique_id': self.format_discovery_id('am43', name, data['mac']),
                     'name': 'Blinds',
                     'availability_topic': "{}/{}".format(self.global_topic_prefix, availability_topic),
