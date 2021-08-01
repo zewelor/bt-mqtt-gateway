@@ -129,7 +129,9 @@ class Am43Worker(BaseWorker):
                 elif shade_position >= 100 - self.target_range_scale:
                     state = 'closed'
 
-                if time_from_last_update <= 10 and previous_position != 255:
+                if self.rapid_update_interval \
+                        and time_from_last_update <= self.rapid_update_interval * self.update_retries \
+                        and previous_position != 255:
                     if previous_position < shade_position:
                         state = 'closing'
                     elif previous_position > shade_position:
