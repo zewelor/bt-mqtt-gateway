@@ -107,7 +107,7 @@ class Am43Worker(BaseWorker):
         else:
             payload = {
                 'unique_id': self.format_discovery_id('am43', device_name, data['mac'], timer_alias),
-                'name': 'AM43 Blinds ({}) Timer {}: Set to {}% at {}'.format(device_name, timer_id,
+                'name': 'AM43 Blinds ({}) Timer {}: Set to {}% at {}'.format(device_name, timer_id + 1,
                                                                              timer['position'], timer['time']),
                 'availability_topic': self.availability_topic,
                 'device': device,
