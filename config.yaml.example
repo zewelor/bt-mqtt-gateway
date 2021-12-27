@@ -5,6 +5,8 @@ mqtt:
   password: password
   #ca_cert: /etc/ssl/certs/ca-certificates.crt # Uncomment to enable MQTT TLS, update path to appropriate location.
   #ca_verify: False              # Verify TLS certificate chain and host, disable for testing with self-signed certificates, default to True
+  #client_cert: mosq_client.crt  # If client_cert and client_key are specified, MQTT uses client certificate authentication instead of username + password
+  #client_key: mosq_client.key
   topic_prefix: hostname         # All messages will have that prefix added, remove if you dont need this.
   client_id: bt-mqtt-gateway
   availability_topic: lwt_topic
@@ -171,3 +173,10 @@ manager:
                                      # will be changed to `default_update_interval`.
       topic_subscription: blinds/+/+/+
       update_interval: 300
+    lightstring:
+      args:
+        devices:
+          led_outdoor: 00:11:22:33:44:55
+        topic_prefix: lightstring/xmas
+      topic_subscription: lightstring/+/+/set
+      update_interval: 60

@@ -17,13 +17,18 @@ class MqttClient:
             userdata={"global_topic_prefix": self.topic_prefix},
         )
 
-        if self.username and self.password:
+        if self.username and self.password and not self.client_key:
             self.mqttc.username_pw_set(self.username, self.password)
 
-        if self.ca_cert:
+        if self.ca_cert and not self.client_key:
             cert_reqs = mqtt.ssl.CERT_REQUIRED if self.ca_verify else mqtt.ssl.CERT_NONE
             self.mqttc.tls_set(self.ca_cert, cert_reqs=cert_reqs)
             self.mqttc.tls_insecure_set(not self.ca_verify)
+
+        if self.ca_cert and self.client_key:
+            cert_reqs = mqtt.ssl.CERT_REQUIRED if self.ca_verify else mqtt.ssl.CERT_NONE
+            self.mqttc.tls_set(self.ca_cert, self.client_cert, self.client_key, cert_reqs=cert_reqs)
+            self.mqttc.tls_insecure_set(not self.ca_verify)            
 
         if self.availability_topic:
             topic = self._format_topic(self.availability_topic)
@@ -68,6 +73,14 @@ class MqttClient:
     @property
     def ca_cert(self):
         return self._config["ca_cert"] if "ca_cert" in self._config else None
+
+    @property
+    def client_cert(self):
+        return self._config["client_cert"] if "client_cert" in self._config else None
+
+    @property
+    def client_key(self):
+        return self._config["client_key"] if "client_key" in self._config else None
 
     @property
     def ca_verify(self):
