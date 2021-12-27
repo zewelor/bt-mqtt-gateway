@@ -57,12 +57,12 @@ mosquitto_sub -h localhost -d -t '#' -u user -P password
 There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
 Thanks @hobbypunk90 and @krasnoukhov for docker work.
 
-Mount config.yaml as /config.yaml volume
+Mount config.yaml as /application/config.yaml volume
 
 Example exec
 
 ```shell
-docker run -d --name bt-mqtt-gateway --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
+docker run -d --name bt-mqtt-gateway --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $PWD/config.yaml:/application/config.yaml zewelor/bt-mqtt-gateway
 ```
 
 #### Docker-compose
