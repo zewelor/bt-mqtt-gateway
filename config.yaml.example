@@ -173,3 +173,10 @@ manager:
                                      # will be changed to `default_update_interval`.
       topic_subscription: blinds/+/+/+
       update_interval: 300
+    lightstring:
+      args:
+        devices:
+          led_outdoor: 00:11:22:33:44:55
+        topic_prefix: lightstring/xmas
+      topic_subscription: lightstring/+/+/set
+      update_interval: 60
