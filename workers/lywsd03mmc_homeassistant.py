@@ -124,6 +124,15 @@ class Lywsd03Mmc_HomeassistantWorker(BaseWorker):
                     type(e).__name__,
                     suppress=True,
                 )
+            except TypeError:
+                logger.log_exception(
+                    _LOGGER,
+                    "Data error during update of %s device '%s' (%s)",
+                    repr(self),
+                    name,
+                    device.mac,
+                    suppress=True,
+                )
             except DeviceTimeoutError:
                 logger.log_exception(
                     _LOGGER,
