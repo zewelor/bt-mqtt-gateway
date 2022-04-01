@@ -23,160 +23,160 @@ manager:
   command_retries: 0            # Number of retries for worker commands. Default is 0. Might not be supported for all workers.
   update_retries: 0             # Number of retries for worker updates. Default is 0. Might not be supported for all workers.
   workers:
-    mysensors:
-      command_timeout: 35       # Optional override of globally set command_timeout.
-      command_retries: 0        # Optional override of globally set command_retries.
-      update_retries: 0         # Optional override of globally set update_retries.
-      args:
-        port: /dev/ttyUSB0
-        baudrate: 9600
-        topic_prefix: mysensors/out
-    thermostat:
-      args:
-        devices:
-          bedroom: 00:11:22:33:44:55  # Simple format
-          living_room:                # Extended format with additional configuration
-            mac: 00:11:22:33:44:55
-            discovery_temperature_topic: some/sensor/with/temperature       # Optional current_temperature_topic for HASS discovery
-            discovery_temperature_template: "{{ value_json.temperature }}"  # Optional current_temperature_template for HASS discovery
-        topic_prefix: thermostat
-      topic_subscription: thermostat/+/+/set
-      update_interval: 60
-    miscale:
-      args:
-        mac: 00:11:22:33:44:55
-        topic_prefix: miscale
-        users:                         # Used for recognizing multiple people, as well as for decoding body metrics! (Optional)
-          Alex:                        # Name (used in MQTT to define a user topic)
-            weight_template:           # The weight template that the user will be tracked by!
-              min: 70
-              max: 90
-            sex: male                  # Sex (male or female)
-            height: 185                # Height (in cm)
-            dob: 2000-01-11            # DOB (in yyyy-mm-dd format)
-          Olivia:
-            weight_template:
-              min: 30
-              max: 60
-            sex: female
-            height: 165
-            dob: 2000-02-22
-      update_interval: 1800
-    linakdesk:
-      args:
-        mac: 00:11:22:33:44:55
-        topic_prefix: linak_desk
-      update_interval: 1800
-    miflora:
-      args:
-        devices:
-          herbs: 00:11:22:33:44:55
-        topic_prefix: miflora
-        per_device_timeout: 6            # Optional override of globally set per_device_timeout.
-      update_interval: 300
-    mithermometer:
-      args:
-        devices:
-          living_room: 00:11:22:33:44:55
-        topic_prefix: mithermometer
-        per_device_timeout: 6            # Optional override of globally set per_device_timeout.
-      update_interval: 300
-    blescanmulti:
-      args:
-        devices:
-          beacon: 00:11:22:33:44:55
-          smartwath: 00:11:22:33:44:55
-        topic_prefix: blescan
-        available_payload: home
-        unavailable_payload: not_home
-        available_timeout: 0
-        unavailable_timeout: 60
-        scan_timeout: 10
-        scan_passive: true
-      update_interval: 60
-    toothbrush:
-      args:
-        devices:
-          ix: 00:11:22:33:44:55
-          ia: 11:22:33:44:55:66
-        topic_prefix: toothbrush
-      update_interval: 10
-    toothbrush_homeassistant:
-      args:
-        autodiscovery_prefix: homeassistant
-        topic_prefix: toothbrush
-        devices:
-          ix:
-            name: IX
-            mac: 00:11:22:33:44:55
-          ia:
-            name: IA
-            mac: 11:22:33:44:55:66
-      update_interval: 10
-    switchbot:
-      args:
-        devices:
-          heater: 00:11:22:33:44:55
-        topic_prefix: switchbot/bathroom
-        state_topic_prefix: switchbot/bathroom
-      topic_subscription: switchbot/+/+/set
-      update_interval: 60
-    smartgadget:
-      args:
-        devices:
-          living_room: 00:11:22:33:44:55
-        topic_prefix: smartgadget
-      update_interval: 300
-    ruuvitag:
-      args:
-        devices:
-          basement: 00:11:22:33:44:55
-        topic_prefix: ruuvitag
-      update_interval: 60
-    lywsd02:
-      args:
-        devices:
-          living_room:  00:11:22:33:44:55
-        topic_prefix: mijasensor
-      update_interval: 120
-    lywsd03mmc:
-      args:
-        devices:
-          bathroom:  00:11:22:33:44:55
-        topic_prefix: mijasensor_gen2
-        passive: false            # Set to true for sensors running custom firmware and advertising type custom. See https://github.com/zewelor/bt-mqtt-gateway/wiki/Devices#lywsd03mmc
-        command_timeout: 30       # Optional timeout for getting data for non-passive readouts
-        scan_timeout: 20          # Optional timeout for passive scanning
+    # mysensors:
+    #   command_timeout: 35       # Optional override of globally set command_timeout.
+    #   command_retries: 0        # Optional override of globally set command_retries.
+    #   update_retries: 0         # Optional override of globally set update_retries.
+    #   args:
+    #     port: /dev/ttyUSB0
+    #     baudrate: 9600
+    #     topic_prefix: mysensors/out
+    # thermostat:
+    #   args:
+    #     devices:
+    #       bedroom: 00:11:22:33:44:55  # Simple format
+    #       living_room:                # Extended format with additional configuration
+    #         mac: 00:11:22:33:44:55
+    #         discovery_temperature_topic: some/sensor/with/temperature       # Optional current_temperature_topic for HASS discovery
+    #         discovery_temperature_template: "{{ value_json.temperature }}"  # Optional current_temperature_template for HASS discovery
+    #     topic_prefix: thermostat
+    #   topic_subscription: thermostat/+/+/set
+    #   update_interval: 60
+    # miscale:
+    #   args:
+    #     mac: 00:11:22:33:44:55
+    #     topic_prefix: miscale
+    #     users:                         # Used for recognizing multiple people, as well as for decoding body metrics! (Optional)
+    #       Alex:                        # Name (used in MQTT to define a user topic)
+    #         weight_template:           # The weight template that the user will be tracked by!
+    #           min: 70
+    #           max: 90
+    #         sex: male                  # Sex (male or female)
+    #         height: 185                # Height (in cm)
+    #         dob: 2000-01-11            # DOB (in yyyy-mm-dd format)
+    #       Olivia:
+    #         weight_template:
+    #           min: 30
+    #           max: 60
+    #         sex: female
+    #         height: 165
+    #         dob: 2000-02-22
+    #   update_interval: 1800
+    # linakdesk:
+    #   args:
+    #     mac: 00:11:22:33:44:55
+    #     topic_prefix: linak_desk
+    #   update_interval: 1800
+    # miflora:
+    #   args:
+    #     devices:
+    #       herbs: 00:11:22:33:44:55
+    #     topic_prefix: miflora
+    #     per_device_timeout: 6            # Optional override of globally set per_device_timeout.
+    #   update_interval: 300
+    # mithermometer:
+    #   args:
+    #     devices:
+    #       living_room: 00:11:22:33:44:55
+    #     topic_prefix: mithermometer
+    #     per_device_timeout: 6            # Optional override of globally set per_device_timeout.
+    #   update_interval: 300
+    # blescanmulti:
+    #   args:
+    #     devices:
+    #       beacon: 00:11:22:33:44:55
+    #       smartwath: 00:11:22:33:44:55
+    #     topic_prefix: blescan
+    #     available_payload: home
+    #     unavailable_payload: not_home
+    #     available_timeout: 0
+    #     unavailable_timeout: 60
+    #     scan_timeout: 10
+    #     scan_passive: true
+    #   update_interval: 60
+    # toothbrush:
+    #   args:
+    #     devices:
+    #       ix: 00:11:22:33:44:55
+    #       ia: 11:22:33:44:55:66
+    #     topic_prefix: toothbrush
+    #   update_interval: 10
+    # toothbrush_homeassistant:
+    #   args:
+    #     autodiscovery_prefix: homeassistant
+    #     topic_prefix: toothbrush
+    #     devices:
+    #       ix:
+    #         name: IX
+    #         mac: 00:11:22:33:44:55
+    #       ia:
+    #         name: IA
+    #         mac: 11:22:33:44:55:66
+    #   update_interval: 10
+    # switchbot:
+    #   args:
+    #     devices:
+    #       heater: 00:11:22:33:44:55
+    #     topic_prefix: switchbot/bathroom
+    #     state_topic_prefix: switchbot/bathroom
+    #   topic_subscription: switchbot/+/+/set
+    #   update_interval: 60
+    # smartgadget:
+    #   args:
+    #     devices:
+    #       living_room: 00:11:22:33:44:55
+    #     topic_prefix: smartgadget
+    #   update_interval: 300
+    # ruuvitag:
+    #   args:
+    #     devices:
+    #       basement: 00:11:22:33:44:55
+    #     topic_prefix: ruuvitag
+    #   update_interval: 60
+    # lywsd02:
+    #   args:
+    #     devices:
+    #       living_room:  00:11:22:33:44:55
+    #     topic_prefix: mijasensor
+    #   update_interval: 120
+    # lywsd03mmc:
+    #   args:
+    #     devices:
+    #       bathroom:  00:11:22:33:44:55
+    #     topic_prefix: mijasensor_gen2
+    #     passive: false            # Set to true for sensors running custom firmware and advertising type custom. See https://github.com/zewelor/bt-mqtt-gateway/wiki/Devices#lywsd03mmc
+    #     command_timeout: 30       # Optional timeout for getting data for non-passive readouts
+    #     scan_timeout: 20          # Optional timeout for passive scanning
         
-      update_interval: 120
-    lywsd03mmc_homeassistant:
-      args:
-        devices:
-          bathroom:  00:11:22:33:44:55
-        topic_prefix: mijasensor_gen2
-      update_interval: 120
-    am43:
-      args:
-        devices:
-          upper_hall: 
-            mac: 00:11:22:33:44:55
-            pin: 8888             # Pin code for the device
-            invert: true          # Set to true to make position 100 be open instead of the default of closed
-        topic_prefix: blinds
-        per_device_timeout: 40
-        hass_device_class: blind  # Optional; the default will be "shade", see https://www.home-assistant.io/integrations/cover/#device-class for details
-        iface: 0                  # Optional; you can get the list of available interfaces by calling `hciconfig`
-        rapid_update_interval: 10 # Optional; if set — the status of the device would be requested automatically after this value of seconds,
-                                  # if any activity was detected during the last update (or a command was executed)
-        default_update_interval: 300 # Optional; used together with `rapid_update_interval`, should have the same value as update_interval.
-                                     # when no changes detected after an update request, and `rapid_update_interval` is set, the update update_interval
-                                     # will be changed to `default_update_interval`.
-      topic_subscription: blinds/+/+/+
-      update_interval: 300
-    lightstring:
-      args:
-        devices:
-          led_outdoor: 00:11:22:33:44:55
-        topic_prefix: lightstring/xmas
-      topic_subscription: lightstring/+/+/set
-      update_interval: 60
+    #   update_interval: 120
+    # lywsd03mmc_homeassistant:
+    #   args:
+    #     devices:
+    #       bathroom:  00:11:22:33:44:55
+    #     topic_prefix: mijasensor_gen2
+    #   update_interval: 120
+    # am43:
+    #   args:
+    #     devices:
+    #       upper_hall: 
+    #         mac: 00:11:22:33:44:55
+    #         pin: 8888             # Pin code for the device
+    #         invert: true          # Set to true to make position 100 be open instead of the default of closed
+    #     topic_prefix: blinds
+    #     per_device_timeout: 40
+    #     hass_device_class: blind  # Optional; the default will be "shade", see https://www.home-assistant.io/integrations/cover/#device-class for details
+    #     iface: 0                  # Optional; you can get the list of available interfaces by calling `hciconfig`
+    #     rapid_update_interval: 10 # Optional; if set — the status of the device would be requested automatically after this value of seconds,
+    #                               # if any activity was detected during the last update (or a command was executed)
+    #     default_update_interval: 300 # Optional; used together with `rapid_update_interval`, should have the same value as update_interval.
+    #                                  # when no changes detected after an update request, and `rapid_update_interval` is set, the update update_interval
+    #                                  # will be changed to `default_update_interval`.
+    #   topic_subscription: blinds/+/+/+
+    #   update_interval: 300
+    # lightstring:
+    #   args:
+    #     devices:
+    #       led_outdoor: 00:11:22:33:44:55
+    #     topic_prefix: lightstring/xmas
+    #   topic_subscription: lightstring/+/+/set
+    #   update_interval: 60
