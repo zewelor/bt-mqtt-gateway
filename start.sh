@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if ! [ -f '/config.yaml' ]; then
+if ! [ -f './config.yaml' ]; then
     echo "There is no config.yaml! An example is created."
     cp /application/config.yaml.example /config.yaml.example
     exit 1

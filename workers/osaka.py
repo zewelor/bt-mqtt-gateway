@@ -1,5 +1,6 @@
 from mqtt import MqttMessage
 from workers.base import BaseWorker
+from enum import Enum
 import logger
 import asyncio
 import platform
@@ -7,16 +8,20 @@ import platform
 REQUIREMENTS = ["bleak"]
 _LOGGER = logger.get(__name__)
 
-CONTROLLER_UUID = "0000ae03-0000-1000-8000-00805f9b34fb"
-NOTIFICATIONS_UUID = "0000ae04-0000-1000-8000-00805f9b34fb"
+class UUID(Enum):
+    WriteService = "0000AE00-0000-1000-8000-00805f9b34fb"
+    NotifyService = "0000AE00-0000-1000-8000-00805f9b34fb"
+    WriteCharacterstic = "0000AE03-0000-1000-8000-00805f9b34fb"
+    NotifyCharacteristic = "0000AE04-0000-1000-8000-00805f9b34fb"
 
-UP = "30C"
-DOWN = "20D"
-STOP = "00F"
-POWER = "F00"
-MODE = "E01"
-PAUSE = "B04"
-B = "609"
+class Command(Enum):
+    Up = "F30C" # 243, 12
+    Down = "F20D" # 242, 13
+    Stop = "F00F" # 240, 15
+    Power = "F00"
+    Mode = "E01"
+    Pause = "B04"
+    B = "609"
 
 
 class OsakaWorker(BaseWorker):
@@ -24,6 +29,7 @@ class OsakaWorker(BaseWorker):
         self.address = self.uuid if platform.system() == "Darwin" else self.mac
         _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), self.name, self.address)
         self.client = self.find_client(self.address)
+        _LOGGER.debug(self.client)
 
     def find_client(self, address):
         from bleak import BleakError, BleakScanner, BleakClient
@@ -46,7 +52,7 @@ class OsakaWorker(BaseWorker):
     async def connect(self):
         if not self.client.is_connected:
             await self.client.connect()
-            await self.client.start_notify(NOTIFICATIONS_UUID, self.on_notification)
+            await self.client.start_notify(UUID.NotifyCharacteristic, self.on_notification)
 
     def on_notification(self, sender, data):
         _LOGGER.debug("%s received '%s' from %s", repr(self), data, sender)
@@ -75,30 +81,34 @@ class OsakaWorker(BaseWorker):
     async def send_command(self, command):
         import binascii
         await self.connect()
-        return await self.client.write_gatt_char(CONTROLLER_UUID, binascii.a2b_hex("55AAF50AF" + command + "FE"))
+        return await self.client.write_gatt_char(UUID.WriteCharacterstic, binascii.a2b_hex(f"55AAF50A{command}FE"))
+
+    async def stop_lift(self):
+        await self.send_command(Command.Stop)
+        await asyncio.sleep(0.1)
+        return await self.send_command(Command.Stop)
 
     async def lift_command(self, direction, payload):
-        await self.send_command(STOP)
-
         if direction != "stop":
             duration = payload.get("duration", 20)
-            instruction = UP if direction == "up" else DOWN
+            instruction = Command.Up if direction == "up" else Command.Down
 
             await asyncio.sleep(0.5)
             await self.send_command(instruction)
             await asyncio.sleep(duration)
-            await self.send_command(STOP)
+
+        await self.stop_lift()
 
         return []
 
     async def music_command(self, command, payload):
         if command == "power":
-            await self.send_command(POWER)
+            await self.send_command(Command.Power)
         elif command == "mode":
-            await self.send_command(MODE)
+            await self.send_command(Command.Mode)
         elif command == "pause":
-            await self.send_command(PAUSE)
+            await self.send_command(Command.Mode)
         elif command == "b":
-            await self.send_command(B)
+            await self.send_command(Command.B)
         
         return []
