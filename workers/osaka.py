@@ -8,51 +8,66 @@ import platform
 REQUIREMENTS = ["bleak"]
 _LOGGER = logger.get(__name__)
 
+
 class UUID(Enum):
     WriteService = "0000AE00-0000-1000-8000-00805f9b34fb"
     NotifyService = "0000AE00-0000-1000-8000-00805f9b34fb"
     WriteCharacterstic = "0000AE03-0000-1000-8000-00805f9b34fb"
     NotifyCharacteristic = "0000AE04-0000-1000-8000-00805f9b34fb"
 
+
 class Command(Enum):
-    Up = "F30C" # 243, 12
-    Down = "F20D" # 242, 13
-    Stop = "F00F" # 240, 15
-    Power = "F00"
-    Mode = "E01"
-    Pause = "B04"
-    B = "609"
+    Up = "F30C"  # 243, 12
+    Down = "F20D"  # 242, 13
+    Stop = "F00F"  # 240, 15
+    Power = "FF00"  # 255, 0
+    Mode = "FE01"  # 254, 1
+    Pause = "FB04"  # 251, 4
+    B = "F609"  # 246, 9
 
 
 class OsakaWorker(BaseWorker):
     def _setup(self):
-        self.address = self.uuid if platform.system() == "Darwin" else self.mac
-        _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), self.name, self.address)
-        self.client = self.find_client(self.address)
-        _LOGGER.debug(self.client)
+        return asyncio.get_event_loop().run_until_complete(self.find_client())
 
-    def find_client(self, address):
+    async def find_client(self):
         from bleak import BleakError, BleakScanner, BleakClient
 
-        async def run():
-            device = await BleakScanner.find_device_by_address(address)
+        def device_filter(d, ad):
+            if d.name is None:
+                return False
 
-            if device is None:
-                return
+            if hasattr(self, "ble_device_name"):
+                return d.name == self.ble_device_name
 
-            client = BleakClient(device)
-            await client.connect()
-            return client
+            return d.name.startswith("OSAKA_BLE")
 
-        return asyncio.get_event_loop().run_until_complete(run())
+        device = await BleakScanner.find_device_by_filter(device_filter)
+
+        if device is None:
+            _LOGGER.debug("Couldnt find an Osaka device")
+            return
+
+        _LOGGER.debug(f"Found {device.name}")
+
+        client = BleakClient(device)
+        await client.connect()
+
+        self.client = client
 
     def status_update(self):
         pass
 
     async def connect(self):
+        if not self.client:
+            _LOGGER.debug("Not connected")
+            return False
+
         if not self.client.is_connected:
             await self.client.connect()
-            await self.client.start_notify(UUID.NotifyCharacteristic, self.on_notification)
+            await self.client.start_notify(UUID.NotifyCharacteristic.value, self.on_notification)
+
+        return True
 
     def on_notification(self, sender, data):
         _LOGGER.debug("%s received '%s' from %s", repr(self), data, sender)
@@ -80,17 +95,18 @@ class OsakaWorker(BaseWorker):
 
     async def send_command(self, command):
         import binascii
-        await self.connect()
-        return await self.client.write_gatt_char(UUID.WriteCharacterstic, binascii.a2b_hex(f"55AAF50A{command}FE"))
+        connected = await self.connect()
+        if connected:
+            return await self.client.write_gatt_char(UUID.WriteCharacterstic.value, binascii.a2b_hex(f"55AAF50A{command.value}FE"))
 
     async def stop_lift(self):
         await self.send_command(Command.Stop)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)  # This is what the official client does
         return await self.send_command(Command.Stop)
 
     async def lift_command(self, direction, payload):
         if direction != "stop":
-            duration = payload.get("duration", 20)
+            duration = payload.get("duration", self.full_extension_seconds)
             instruction = Command.Up if direction == "up" else Command.Down
 
             await asyncio.sleep(0.5)
@@ -110,5 +126,5 @@ class OsakaWorker(BaseWorker):
             await self.send_command(Command.Mode)
         elif command == "b":
             await self.send_command(Command.B)
-        
+
         return []
