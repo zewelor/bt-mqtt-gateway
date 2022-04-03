@@ -55,8 +55,8 @@ def verify():
         else:
             prefix = ""
 
-        _LOGGER.error('You may install those with pip:%s python3 -m pip install %s',
-                      prefix, ' '.join(requirements))
+        _LOGGER.error('You may install those with pip: cd %s ; %s python3 -m pip install `./gateway.py -r configured`',
+                      os.path.dirname(os.path.abspath(__file__)), prefix)
         exit(1)
 
 
