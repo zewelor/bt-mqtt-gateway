@@ -1,4 +1,4 @@
-from mqtt import MqttMessage
+from mqtt import MqttMessage, MqttConfigMessage
 from workers.base import BaseWorker
 from enum import Enum
 import logger
@@ -7,6 +7,7 @@ import platform
 
 REQUIREMENTS = ["bleak"]
 _LOGGER = logger.get(__name__)
+SHORT_WAIT = 0.1
 
 
 class UUID(Enum):
@@ -16,7 +17,7 @@ class UUID(Enum):
     NotifyCharacteristic = "0000AE04-0000-1000-8000-00805f9b34fb"
 
 
-class Command(Enum):
+class BluetoothCommand(Enum):
     Up = "F30C"  # 243, 12
     Down = "F20D"  # 242, 13
     Stop = "F00F"  # 240, 15
@@ -26,7 +27,18 @@ class Command(Enum):
     B = "F609"  # 246, 9
 
 
+class LiftState(Enum):
+    Opened = "open"
+    Closed = "clos"
+
+
 class OsakaWorker(BaseWorker):
+    lift_state = LiftState.Closed
+
+    name: str
+    device = None
+    address = ""
+
     def _setup(self):
         return asyncio.get_event_loop().run_until_complete(self.find_client())
 
@@ -48,6 +60,9 @@ class OsakaWorker(BaseWorker):
             _LOGGER.debug("Couldnt find an Osaka device")
             return
 
+        self.device = device
+        self.address = device.address
+
         _LOGGER.debug(f"Found {device.name}")
 
         client = BleakClient(device)
@@ -65,9 +80,43 @@ class OsakaWorker(BaseWorker):
 
         if not self.client.is_connected:
             await self.client.connect()
-            await self.client.start_notify(UUID.NotifyCharacteristic.value, self.on_notification)
+            await self.client.start_notify(
+                UUID.NotifyCharacteristic.value, self.on_notification
+            )
 
         return True
+
+    def config(self, availability_topic):
+        device = {
+            "identifiers": [
+                self.address,
+                self.format_discovery_id(self.address, self.name),
+            ],
+            "manufacturer": "Dreams",
+            "model": "Osaka",
+            "name": self.format_discovery_name(self.name),
+        }
+
+        return [
+            MqttConfigMessage(
+                MqttConfigMessage.COVER,
+                self.format_discovery_topic(self.address, self.name, "lift"),
+                payload={
+                    "device_class": "garage",
+                    "unique_id": self.format_discovery_id(
+                        "osaka", self.name, self.address
+                    ),
+                    "name": "Osaka TV Bed Lift",
+                    "availability_topic": "{}/{}".format(
+                        self.global_topic_prefix, availability_topic
+                    ),
+                    "device": device,
+                    "state_topic": "~/state",
+                    "command_topic": "~/set",
+                    "~": self.format_prefixed_topic(self.name),
+                },
+            )
+        ]
 
     def on_notification(self, sender, data):
         _LOGGER.debug("%s received '%s' from %s", repr(self), data, sender)
@@ -75,7 +124,7 @@ class OsakaWorker(BaseWorker):
     def on_command(self, topic, raw_payload):
         from json import loads
 
-        _, device_name, command, subcommand = topic.split("/")
+        _, device_name, device_type, command = topic.split("/")
 
         if device_name != self.name:
             return
@@ -86,45 +135,70 @@ class OsakaWorker(BaseWorker):
             payload = {}
 
         async def run():
-            if command == "lift":
-                return await self.lift_command(subcommand, payload)
-            elif command == "music":
-                return await self.music_command(subcommand, payload)
+            if device_type == "lift":
+                return await self.lift_command(command, payload)
+            elif device_type == "music":
+                return await self.music_command(command, payload)
 
         return asyncio.get_event_loop().run_until_complete(run())
 
     async def send_command(self, command):
         import binascii
+
         connected = await self.connect()
         if connected:
-            return await self.client.write_gatt_char(UUID.WriteCharacterstic.value, binascii.a2b_hex(f"55AAF50A{command.value}FE"))
+            return await self.client.write_gatt_char(
+                UUID.WriteCharacterstic.value,
+                binascii.a2b_hex(f"55AAF50A{command.value}FE"),
+            )
 
-    async def stop_lift(self):
-        await self.send_command(Command.Stop)
-        await asyncio.sleep(0.1)  # This is what the official client does
-        return await self.send_command(Command.Stop)
+    def change_lift_state(self, new_state: LiftState):
+        self.state = new_state
+        return [
+            MqttMessage(
+                self.format_topic(self.name, "state"),
+                payload=new_state.value,
+                retain=True,
+            )
+        ]
 
-    async def lift_command(self, direction, payload):
-        if direction != "stop":
-            duration = payload.get("duration", self.full_extension_seconds)
-            instruction = Command.Up if direction == "up" else Command.Down
+    async def open(self):
+        await asyncio.sleep(SHORT_WAIT)
+        await self.send_command(BluetoothCommand.Up)
+        await asyncio.sleep(self.full_extension_seconds)
+        await self.stop()
+        return self.change_lift_state(LiftState.Opened)
 
-            await asyncio.sleep(0.5)
-            await self.send_command(instruction)
-            await asyncio.sleep(duration)
+    async def close(self):
+        await asyncio.sleep(SHORT_WAIT)
+        await self.send_command(BluetoothCommand.Down)
+        await asyncio.sleep(self.full_extension_seconds)
+        await self.stop()
+        return self.change_lift_state(LiftState.Closed)
 
-        await self.stop_lift()
-
+    async def stop(self):
+        await self.send_command(BluetoothCommand.Stop)
+        # This is what the official client does
+        await asyncio.sleep(SHORT_WAIT)
+        await self.send_command(BluetoothCommand.Stop)
         return []
+
+    async def lift_command(self, command):
+        if command == "OPEN" and self.state == LiftState.Closed:
+            return await self.open()
+        elif command == "CLOSE" and self.state == LiftState.Opened:
+            return await self.close()
+        elif command == "STOP":
+            return await self.stop()
+        else:
+            _LOGGER.debug(f"Unknown lift command {command}")
 
     async def music_command(self, command, payload):
         if command == "power":
-            await self.send_command(Command.Power)
+            await self.send_command(BluetoothCommand.Power)
         elif command == "mode":
-            await self.send_command(Command.Mode)
+            await self.send_command(BluetoothCommand.Mode)
         elif command == "pause":
-            await self.send_command(Command.Mode)
+            await self.send_command(BluetoothCommand.Mode)
         elif command == "b":
-            await self.send_command(Command.B)
-
-        return []
+            await self.send_command(BluetoothCommand.B)
