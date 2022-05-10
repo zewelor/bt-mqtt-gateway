@@ -57,12 +57,12 @@ mosquitto_sub -h localhost -d -t '#' -u user -P password
 There are prebuilt docker images at https://hub.docker.com/r/zewelor/bt-mqtt-gateway/tags. 
 Thanks @hobbypunk90 and @krasnoukhov for docker work.
 
-Mount config.yaml as /config.yaml volume
+Mount config.yaml as /application/config.yaml volume
 
 Example exec
 
 ```shell
-docker run -d --name bt-mqtt-gateway --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $PWD/config.yaml:/config.yaml zewelor/bt-mqtt-gateway
+docker run -d --name bt-mqtt-gateway --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $PWD/config.yaml:/application/config.yaml zewelor/bt-mqtt-gateway
 ```
 
 #### Docker-compose
@@ -84,10 +84,10 @@ git clone https://github.com/zewelor/bt-mqtt-gateway.git
 cd bt-mqtt-gateway
 virtualenv -p python3 .venv
 source .venv/bin/activate
-sudo pip3 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
-All needed python libs, per each worker, should be auto installed on run. If now you can install them manually:
+All needed python libs, per each worker, should be auto installed on run. If not you can install them manually:
 
 ```shell
 pip3 install `./gateway.py -r configured`

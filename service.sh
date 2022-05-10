@@ -8,4 +8,4 @@ if [ -d "$VIRTUAL_ENV" ]; then
     export PATH
 fi
 cd "$SCRIPT_DIR"
-python3 ./gateway.py "$@"
+sudo python3 ./gateway.py "$@"

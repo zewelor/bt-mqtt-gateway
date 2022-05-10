@@ -9,7 +9,7 @@ services:
     #environment:
     #  - DEBUG=true
     volumes:
-      - ./config.yaml:/config.yaml
+      - ./config.yaml:/application/config.yaml
     cap_add:
       - NET_ADMIN
       - NET_RAW

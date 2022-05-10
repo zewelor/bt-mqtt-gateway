@@ -3,7 +3,6 @@ from workers.base import BaseWorker
 from enum import Enum
 import logger
 import asyncio
-import platform
 
 REQUIREMENTS = ["bleak"]
 _LOGGER = logger.get(__name__)

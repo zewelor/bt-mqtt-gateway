@@ -2,6 +2,7 @@ import importlib
 from pathlib import Path
 import pkg_resources
 import re
+import os
 
 import logger
 
@@ -48,8 +49,14 @@ def verify():
         _LOGGER.error('Error: unsatisfied requirements:')
         for error in errors:
             _LOGGER.error('  %s', error)
-        _LOGGER.error('You may install those with pip: python -m pip install %s',
-                      ' '.join(requirements))
+
+        if os.geteuid() == 0:
+            prefix = " sudo"
+        else:
+            prefix = ""
+
+        _LOGGER.error('You may install those with pip: cd %s ; %s python3 -m pip install `./gateway.py -r configured`',
+                      os.path.dirname(os.path.abspath(__file__)), prefix)
         exit(1)
 
 
