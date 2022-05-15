@@ -33,7 +33,8 @@ class MifloraWorker(BaseWorker):
             _LOGGER.debug("Adding %s device '%s' (%s)", repr(self), name, mac)
             self.devices[name] = {
                 "mac": mac,
-                "poller": MiFloraPoller(mac, BluepyBackend),
+                "poller": MiFloraPoller(
+                    mac, BluepyBackend, adapter=getattr(self, 'adapter', 'hci0')),
             }
 
     def config(self, availability_topic):

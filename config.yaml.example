@@ -69,6 +69,7 @@ manager:
     #   update_interval: 1800
     # miflora:
     #   args:
+    #     adapter: hci0
     #     devices:
     #       herbs: 00:11:22:33:44:55
     #     topic_prefix: miflora
