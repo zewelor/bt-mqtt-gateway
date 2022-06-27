@@ -1,5 +1,3 @@
-import logging
-
 from mqtt import MqttMessage
 
 from workers.base import BaseWorker, retry
@@ -41,6 +39,7 @@ class SwitchbotWorker(BaseWorker):
         return ret
 
     def on_command(self, topic, value):
+        from bluepy.btle import BTLEException
 
         _, _, device_name, _ = topic.split("/")
 
@@ -91,7 +90,7 @@ class SwitchbotWorker(BaseWorker):
 
 def switch_state(bot, value):
     import binascii
-    from bluepy.btle import Peripheral, BTLEException
+    from bluepy.btle import Peripheral
 
     bot["bot"] = Peripheral(bot["mac"], "random")
     hand_service = bot["bot"].getServiceByUUID(SERVICE_UUID)
