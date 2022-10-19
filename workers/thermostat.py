@@ -176,7 +176,9 @@ class ThermostatWorker(BaseWorker):
             "name": self.format_discovery_name(name, SENSOR_VALVE),
             "state_topic": self.format_prefixed_topic(name, SENSOR_VALVE),
             "availability_topic": availability_topic,
+            "device_class": "power_factor",
             "unit_of_measurement": "%",
+            "state_class": "measurement",
             "device": device,
         }
         ret.append(
