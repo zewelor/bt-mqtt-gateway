@@ -6,14 +6,15 @@ import logger
 REQUIREMENTS = ["python-eq3bt==0.1.11"]
 _LOGGER = logger.get(__name__)
 
-STATE_HEAT = "heat"
-STATE_AUTO = "auto"
-STATE_OFF = "off"
+MODE_HEAT = "heat"
+MODE_AUTO = "auto"
+MODE_OFF = "off"
 
-HOLD_NONE = "none"
-HOLD_BOOST = "boost"
-HOLD_COMFORT = "comfort"
-HOLD_ECO = "eco"
+PRESET_NONE = "none"
+PRESET_BOOST = "boost"
+PRESET_COMFORT = "comfort"
+PRESET_ECO = "eco"
+PRESET_AWAY = "away"
 
 SENSOR_CLIMATE = "climate"
 SENSOR_WINDOW = "window_open"
@@ -89,18 +90,16 @@ class ThermostatWorker(BaseWorker):
             ),
             "mode_state_topic": self.format_prefixed_topic(name, "mode"),
             "mode_command_topic": self.format_prefixed_topic(name, "mode", "set"),
-            "away_mode_state_topic": self.format_prefixed_topic(name, "away"),
-            "away_mode_command_topic": self.format_prefixed_topic(name, "away", "set"),
-            "hold_state_topic": self.format_prefixed_topic(name, "hold"),
-            "hold_command_topic": self.format_prefixed_topic(name, "hold", "set"),
+            "preset_mode_state_topic": self.format_prefixed_topic(name, "preset"),
+            "preset_mode_command_topic": self.format_prefixed_topic(name, "preset", "set"),
             "json_attributes_topic": self.format_prefixed_topic(
                 name, "json_attributes"
             ),
             "min_temp": 5.0,
             "max_temp": 29.5,
             "temp_step": 0.5,
-            "modes": [STATE_HEAT, STATE_AUTO, STATE_OFF],
-            "hold_modes": [HOLD_BOOST, HOLD_COMFORT, HOLD_ECO],
+            "modes": [MODE_HEAT, MODE_AUTO, MODE_OFF],
+            "preset_modes": [PRESET_BOOST, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY],
             "device": device,
         }
         if data.get("discovery_temperature_topic"):
@@ -232,9 +231,9 @@ class ThermostatWorker(BaseWorker):
         value = value.decode("utf-8")
         if method == "mode":
             state_mapping = {
-                STATE_HEAT: Mode.Manual,
-                STATE_AUTO: Mode.Auto,
-                STATE_OFF: Mode.Closed,
+                MODE_HEAT: Mode.Manual,
+                MODE_AUTO: Mode.Auto,
+                MODE_OFF: Mode.Closed,
             }
             if value in state_mapping:
                 value = state_mapping[value]
@@ -242,25 +241,22 @@ class ThermostatWorker(BaseWorker):
                 logger.log_exception(_LOGGER, "Invalid mode setting %s", value)
                 return []
 
-        elif method == "hold":
-            if value == HOLD_BOOST:
+        elif method == "preset":
+            if value == PRESET_BOOST:
                 method = "mode"
                 value = Mode.Boost
-            elif value in (HOLD_COMFORT, HOLD_ECO):
+            elif value in (PRESET_COMFORT, PRESET_ECO):
                 method = "preset"
-            elif value == "off":
+            elif value == PRESET_AWAY:
+                method = "mode"
+                value = Mode.Away
+            elif value == PRESET_NONE:
                 method = "mode"
                 value = default_fallback_mode
             else:
-                logger.log_exception(_LOGGER, "Invalid hold setting %s", value)
+                logger.log_exception(_LOGGER, "Invalid preset setting %s", value)
                 return []
 
-        elif method == "away":
-            method = "mode"
-            if value == 'OFF':
-                value = default_fallback_mode
-            else:
-                value = Mode.Away
         elif method == "target_temperature":
             value = float(value)
 
@@ -274,7 +270,7 @@ class ThermostatWorker(BaseWorker):
         )
         try:
             if method == "preset":
-                if value == HOLD_COMFORT:
+                if value == PRESET_COMFORT:
                     retry(thermostat.activate_comfort, retries=self.command_retries, exception_type=btle.BTLEException)()
                 else:
                     retry(thermostat.activate_eco, retries=self.command_retries, exception_type=btle.BTLEException)()
@@ -319,30 +315,24 @@ class ThermostatWorker(BaseWorker):
         )
 
         mapping = {
-            Mode.Auto: STATE_AUTO,
-            Mode.Closed: STATE_OFF,
-            Mode.Boost: STATE_AUTO,
+            Mode.Auto: MODE_AUTO,
+            Mode.Closed: MODE_OFF,
+            Mode.Boost: MODE_AUTO,
         }
-        mode = mapping.get(thermostat.mode, STATE_HEAT)
+        mode = mapping.get(thermostat.mode, MODE_HEAT)
 
         if thermostat.mode == Mode.Boost:
-            hold = HOLD_BOOST
+            preset = PRESET_BOOST
         elif thermostat.mode == Mode.Away:
-            hold = "off"
+            preset = PRESET_AWAY
         elif thermostat.target_temperature == thermostat.comfort_temperature:
-            hold = HOLD_COMFORT
+            preset = PRESET_COMFORT
         elif thermostat.target_temperature == thermostat.eco_temperature:
-            hold = HOLD_ECO
+            preset = PRESET_ECO
         else:
-            hold = HOLD_NONE
+            preset = PRESET_NONE
 
         ret.append(MqttMessage(topic=self.format_topic(name, "mode"), payload=mode))
-        ret.append(MqttMessage(topic=self.format_topic(name, "hold"), payload=hold))
-        ret.append(
-            MqttMessage(
-                topic=self.format_topic(name, "away"),
-                payload=self.true_false_to_ha_on_off(thermostat.mode == Mode.Away),
-            )
-        )
+        ret.append(MqttMessage(topic=self.format_topic(name, "preset"), payload=preset))
 
         return ret
