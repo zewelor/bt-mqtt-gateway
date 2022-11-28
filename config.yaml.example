@@ -39,6 +39,7 @@ manager:
     #         mac: 00:11:22:33:44:55
     #         discovery_temperature_topic: some/sensor/with/temperature       # Optional current_temperature_topic for HASS discovery
     #         discovery_temperature_template: "{{ value_json.temperature }}"  # Optional current_temperature_template for HASS discovery
+    #         interface: 0                                                    # Optional interface id for bt communication
     #     topic_prefix: thermostat
     #   topic_subscription: thermostat/+/+/set
     #   update_interval: 60

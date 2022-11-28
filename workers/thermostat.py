@@ -3,7 +3,7 @@ from mqtt import MqttMessage, MqttConfigMessage
 from workers.base import BaseWorker, retry
 import logger
 
-REQUIREMENTS = ["python-eq3bt==0.1.11"]
+REQUIREMENTS = ["python-eq3bt==0.1.12"]
 _LOGGER = logger.get(__name__)
 
 MODE_HEAT = "heat"
@@ -44,7 +44,7 @@ class ThermostatWorker(BaseWorker):
             elif isinstance(obj, dict):
                 self.devices[name] = {
                     "mac": obj["mac"],
-                    "thermostat": Thermostat(obj["mac"]),
+                    "thermostat": Thermostat(obj["mac"], obj.get("interface")),
                     "discovery_temperature_topic": obj.get(
                         "discovery_temperature_topic"
                     ),
