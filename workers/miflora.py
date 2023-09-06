@@ -7,11 +7,8 @@ from workers.base import BaseWorker, retry
 import logger
 
 REQUIREMENTS = [
-    # Reference specific commit to include the transitive dependency
-    # btlewrap in version 0.0.9. This should be reverted to just
-    # "miflora" once miflora version > 0.6 is available on pypi.
-    "git+https://github.com/open-homeautomation/miflora.git@ebda66d1f4ba71bc0b98f8383280e59302b40fc8#egg=miflora",
-    "bluepy"
+    "bluepy",
+    "miflora",
 ]
 
 ATTR_BATTERY = "battery"
