@@ -134,10 +134,23 @@ class MifloraWorker(BaseWorker):
         ret = []
         poller.clear_cache()
         for attr in monitoredAttrs:
+            payload = poller.parameter_value(attr)
+
+            # We sometimes see light values of over 400 million. This
+            # probably comes from a sensor error or maybe the miflora
+            # library not understanding the protocol completely.
+            #
+            # In any case, direct sunlight is up to 100 thousand lux,
+            # so anything above that is suspicious. Lets cap our value
+            # at 1 million lux, an order of magnitude more than we ever
+            # expect.
+            if (attr == "light") and (payload > 1_000_000):
+                continue
+
             ret.append(
                 MqttMessage(
                     topic=self.format_topic(name, attr),
-                    payload=poller.parameter_value(attr),
+                    payload=payload,
                 )
             )
 
