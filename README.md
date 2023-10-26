@@ -1,3 +1,6 @@
+I suggest to use https://esphome.io/components/bluetooth_proxy.html instead. In my opinion its better solution now.
+
+
 # bt-mqtt-gateway
 
 A simple Python script which provides a Bluetooth to MQTT gateway, easily extensible via custom workers.  
